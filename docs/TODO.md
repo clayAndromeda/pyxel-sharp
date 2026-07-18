@@ -31,11 +31,6 @@
 - [ ] NuGet パッケージ化 (`runtimes/win-x64/native/pyxel_bind_cs.dll` 同梱)
 - [ ] Linux / macOS ビルド対応 (pyxel-core は SDL2 なので原理的には可能)
 
-## 書き味の改善 (バインディング完成後に検討)
-
-- [ ] ECS レイヤ (`PyxelSharp.Ecs`, Friflo.Engine.ECS ベース) — 旧セッションで方針検討済み。
-      採用可否は Stage 2〜3 完了後に再判断
-
 ## 開発環境の注意 (このマシン固有)
 
 - Smart App Control が未署名ビルド成果物をブロックする。無効化するか、
