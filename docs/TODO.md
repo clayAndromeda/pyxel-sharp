@@ -57,11 +57,34 @@
   `Version` (FFI 取得)、サイズ系/バンク数 (`TileSize`/`ImageSize`/`FontWidth` 等は
   C# const、HeadlessSmoke でランタイム値と照合)、`ToneTriangle` 等/`EffectSlide` 等
   (const byte)、`DefaultColors`。Python ランチャ固有定数と CLI/Editor は対象外
-- [ ] Python サンプル (pyxel/python/pyxel/examples 01〜) の移植で網羅検証
+- Python サンプル移植による網羅検証は「その他 (時期未定)」へ移動
 
-## インフラ / 配布
+## Stage 4: 導入体験 (2026-07-18 設計レビューで合意)
 
-- [ ] `git push` (origin = github.com/clayAndromeda/pyxel-sharp、未 push)
-- [ ] CI (GitHub Actions windows-latest): cargo build + dotnet build + HeadlessSmoke 実行
-- [ ] NuGet パッケージ化 (`runtimes/win-x64/native/pyxel_bind_cs.dll` 同梱)
-- [ ] Linux / macOS ビルド対応 (pyxel-core は SDL2 なので原理的には可能)
+ゴール: `dotnet add package PyxelSharp` (ローカルフィード) + `dotnet new pyxel` だけで、
+Rust/LLVM/CMake なしにゲームが書ける状態。win-x64 のみ。バージョンは独自 0.x semver
+(0.1.0 開始、同梱する本家 pyxel バージョンはパッケージ説明に明記)。TFM は net10.0 のまま
+(NuGet.org 公開を決めた時点で net8.0 引き下げを検討)。
+
+- [ ] LICENSE 追加 (MIT + 本家 Pyxel への帰属表記) → リポジトリを public で `git push`
+  (origin = github.com/clayAndromeda/pyxel-sharp、未 push)
+- [ ] NuGet パッケージ化: `runtimes/win-x64/native/pyxel_bind_cs.dll` 同梱、
+  pack 時のみ cargo build を要求 (消費側プロジェクトでは Rust ビルドを走らせない)
+- [ ] ローカルフィード運用の pack スクリプト + 手順 (README に消費側の設定方法を記載)
+- [ ] `dotnet new pyxel` テンプレートパッケージ: 最小トップレベル Program.cs 1 枚
+  (README の例と同じ Init/Run/Update/Draw)。専用 CLI ツールは作らない
+- [ ] 検証: 別ディレクトリの新規プロジェクトでフィードから導入 → 実行まで通す
+- 後回し (合意済み): CI (GitHub Actions) は NuGet.org 公開検討時に整備。
+  `package`/`app2exe` 相当は `dotnet publish` 手順を README に書くことで代替
+
+## Stage 5: リソースエディタ C# 移植 (Stage 4 の後)
+
+- [ ] pyxel/python/pyxel/editor (約20ファイル) を PyxelSharp 上に移植。
+  PyxelSharp 自身のドッグフーディングを兼ねる。詳細設計は着手時に別途レビュー
+- それまでの .pyxres 編集は Python 版 pyxel のエディタを併用 (フォーマット共通)
+
+## その他 (時期未定)
+
+- [ ] Linux / macOS ビルド対応 (pyxel-core は SDL2 なので原理的には可能。
+  runtimes/ 構造はマルチプラットフォーム前提で設計しておく)
+- [ ] Python サンプル (pyxel/python/pyxel/examples 01〜) の移植で網羅検証 (Stage 3 残)
