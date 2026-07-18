@@ -32,10 +32,13 @@ macro_rules! ffi {
     };
 }
 
+mod font;
 mod graphics;
 mod image;
 mod input;
+mod resource;
 mod system;
+mod tilemap;
 
 use std::cell::RefCell;
 use std::ffi::{c_char, CStr, CString};

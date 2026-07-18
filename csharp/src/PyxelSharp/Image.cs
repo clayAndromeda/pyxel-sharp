@@ -214,12 +214,13 @@ public sealed unsafe class Image : IDisposable
     public void Fill(float x, float y, Color color) =>
         Pyxel.Check(NativeMethods.pyxel_image_fill(Handle, x, y, color.Value));
 
-    /// <summary>Draws text with the built-in font (Python: <c>image.text</c>).</summary>
-    public void Text(float x, float y, string text, Color color)
+    /// <summary>Draws text (Python: <c>image.text</c>).</summary>
+    public void Text(float x, float y, string text, Color color, Font? font = null)
     {
         fixed (byte* textPtr = Pyxel.ToUtf8Required(text))
         {
-            Pyxel.Check(NativeMethods.pyxel_image_text(Handle, x, y, textPtr, color.Value));
+            Pyxel.Check(NativeMethods.pyxel_image_text(
+                Handle, x, y, textPtr, color.Value, Font.HandleOrNull(font)));
         }
     }
 
@@ -262,6 +263,125 @@ public sealed unsafe class Image : IDisposable
         float? scale = null) =>
         Blt(x, y, Pyxel.Images[imageBank], u, v, width, height, colorKey, rotate, scale);
 
+    /// <summary>Draws a region of a tilemap onto this image (Python: <c>image.bltm</c>).</summary>
+    public void Bltm(
+        float x,
+        float y,
+        Tilemap tilemap,
+        float u,
+        float v,
+        float width,
+        float height,
+        Color? colorKey = null,
+        float? rotate = null,
+        float? scale = null) =>
+        Pyxel.Check(NativeMethods.pyxel_image_bltm(
+            Handle,
+            x,
+            y,
+            tilemap.Handle,
+            u,
+            v,
+            width,
+            height,
+            Pyxel.ToSentinel(colorKey),
+            Pyxel.ToSentinel(rotate),
+            Pyxel.ToSentinel(scale)));
+
+    /// <summary>Draws a region of a tilemap bank onto this image (Python: <c>image.bltm</c>).</summary>
+    public void Bltm(
+        float x,
+        float y,
+        int tilemapBank,
+        float u,
+        float v,
+        float width,
+        float height,
+        Color? colorKey = null,
+        float? rotate = null,
+        float? scale = null) =>
+        Bltm(x, y, Pyxel.Tilemaps[tilemapBank], u, v, width, height, colorKey, rotate, scale);
+
+    /// <summary>Perspective-projects a region of an image onto this one (Python: <c>image.blt3d</c>).</summary>
+    public void Blt3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        Image image,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Pyxel.Check(NativeMethods.pyxel_image_blt3d(
+            Handle,
+            x,
+            y,
+            width,
+            height,
+            image.Handle,
+            pos.X,
+            pos.Y,
+            pos.Z,
+            rot.X,
+            rot.Y,
+            rot.Z,
+            Pyxel.ToSentinel(fov),
+            Pyxel.ToSentinel(colorKey)));
+
+    /// <summary>Perspective-projects a region of an image bank onto this one (Python: <c>image.blt3d</c>).</summary>
+    public void Blt3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        int imageBank,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Blt3d(x, y, width, height, Pyxel.Images[imageBank], pos, rot, fov, colorKey);
+
+    /// <summary>Perspective-projects a region of a tilemap onto this image (Python: <c>image.bltm3d</c>).</summary>
+    public void Bltm3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        Tilemap tilemap,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Pyxel.Check(NativeMethods.pyxel_image_bltm3d(
+            Handle,
+            x,
+            y,
+            width,
+            height,
+            tilemap.Handle,
+            pos.X,
+            pos.Y,
+            pos.Z,
+            rot.X,
+            rot.Y,
+            rot.Z,
+            Pyxel.ToSentinel(fov),
+            Pyxel.ToSentinel(colorKey)));
+
+    /// <summary>Perspective-projects a region of a tilemap bank onto this image (Python: <c>image.bltm3d</c>).</summary>
+    public void Bltm3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        int tilemapBank,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Bltm3d(x, y, width, height, Pyxel.Tilemaps[tilemapBank], pos, rot, fov, colorKey);
+
     /// <summary>
     /// Releases the native image. Safe to call from any thread; the actual
     /// release may be deferred to the next frame. No-op for image banks and
@@ -273,7 +393,7 @@ public sealed unsafe class Image : IDisposable
         {
             return;
         }
-        Pyxel.ReleaseImageHandle((IntPtr)_handle);
+        Pyxel.ReleaseHandle((IntPtr)_handle, Pyxel.HandleKind.Image);
         _handle = null;
         GC.SuppressFinalize(this);
     }
@@ -282,7 +402,7 @@ public sealed unsafe class Image : IDisposable
     {
         if (_handle is not null)
         {
-            Pyxel.ReleaseImageHandle((IntPtr)_handle);
+            Pyxel.ReleaseHandle((IntPtr)_handle, Pyxel.HandleKind.Image);
         }
     }
 }

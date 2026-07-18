@@ -19,12 +19,19 @@ public static unsafe partial class Pyxel
     private static Action? _draw;
     private static ExceptionDispatchInfo? _callbackException;
 
-    // Native image handles wrap Rc<RefCell<_>>, which is not thread-safe, so
-    // they may only be dropped on the thread that drives pyxel. Dispose on
-    // that thread drops immediately; finalizers and other threads enqueue the
+    // Native handles wrap Rc<RefCell<_>>, which is not thread-safe, so they
+    // may only be dropped on the thread that drives pyxel. Dispose on that
+    // thread drops immediately; finalizers and other threads enqueue the
     // handle here, and the queue is drained once per frame (and on Flip/Show).
     private static int _pyxelThreadId = -1;
-    private static readonly ConcurrentQueue<IntPtr> _pendingHandleDrops = new();
+    private static readonly ConcurrentQueue<(IntPtr Handle, HandleKind Kind)> _pendingHandleDrops = new();
+
+    internal enum HandleKind
+    {
+        Image,
+        Tilemap,
+        Font,
+    }
 
     /// <summary>Initializes the Pyxel window and singleton. Call once, before anything else.</summary>
     public static void Init(
@@ -153,23 +160,39 @@ public static unsafe partial class Pyxel
         }
     }
 
-    internal static void ReleaseImageHandle(IntPtr handle)
+    internal static void ReleaseHandle(IntPtr handle, HandleKind kind)
     {
         if (Environment.CurrentManagedThreadId == _pyxelThreadId)
         {
-            NativeMethods.pyxel_image_drop((void*)handle);
+            DropHandle(handle, kind);
         }
         else
         {
-            _pendingHandleDrops.Enqueue(handle);
+            _pendingHandleDrops.Enqueue((handle, kind));
         }
     }
 
     private static void DrainPendingHandleDrops()
     {
-        while (_pendingHandleDrops.TryDequeue(out var handle))
+        while (_pendingHandleDrops.TryDequeue(out var entry))
         {
-            NativeMethods.pyxel_image_drop((void*)handle);
+            DropHandle(entry.Handle, entry.Kind);
+        }
+    }
+
+    private static void DropHandle(IntPtr handle, HandleKind kind)
+    {
+        switch (kind)
+        {
+            case HandleKind.Image:
+                NativeMethods.pyxel_image_drop((void*)handle);
+                break;
+            case HandleKind.Tilemap:
+                NativeMethods.pyxel_tilemap_drop((void*)handle);
+                break;
+            case HandleKind.Font:
+                NativeMethods.pyxel_font_drop((void*)handle);
+                break;
         }
     }
 

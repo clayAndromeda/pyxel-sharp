@@ -88,6 +88,69 @@ catch (ObjectDisposedException)
     Check(true, "disposed image -> ObjectDisposedException");
 }
 
+// Stage 2 slice 2: tilemaps
+
+Check(Pyxel.Tilemaps.Count == 8, $"Tilemaps.Count = {Pyxel.Tilemaps.Count}");
+
+var tilemap = new Tilemap(4, 4, 0);
+Check(tilemap.Width == 4 && tilemap.Height == 4, $"new Tilemap -> {tilemap.Width}x{tilemap.Height}");
+tilemap.Cls((1, 1));
+Check(tilemap.Pget(0, 0) == new Tile(1, 1), $"tilemap cls -> pget = {tilemap.Pget(0, 0)}");
+tilemap.Pset(0, 0, (0, 0));
+Check(tilemap.Pget(0, 0) == new Tile(0, 0), $"tilemap pset -> pget = {tilemap.Pget(0, 0)}");
+
+// tile (0, 0) references image bank 0 pixels (0..8, 0..8), which still hold
+// the "0123"/"4567" pattern written above
+Pyxel.Bltm(50, 20, tilemap, 0, 0, 8, 8);
+Check(Pyxel.Pget(52, 20) == 2, $"bltm -> screen pget = {Pyxel.Pget(52, 20)}");
+
+var (allowedDx, allowedDy) = tilemap.Collide(0, 0, 8, 8, 4, 0);
+Check(allowedDx == 4 && allowedDy == 0, $"collide without walls -> ({allowedDx}, {allowedDy})");
+
+Check(tilemap.ImageSourceIndex == 0, $"imgsrc index = {tilemap.ImageSourceIndex}");
+var sourceImage = new Image(8, 8);
+tilemap.SetImageSource(sourceImage);
+Check(tilemap.ImageSourceIndex is null, "imgsrc index is null after image source");
+var readBack = tilemap.ImageSourceImage;
+Check(readBack is { Width: 8 }, "imgsrc image reads back");
+readBack!.Dispose();
+tilemap.SetImageSource(0);
+sourceImage.Dispose();
+tilemap.Dispose();
+
+// Stage 2 slice 2: fonts
+
+var fontPath = Path.Combine(AppContext.BaseDirectory, "assets", "PixelMplus10-Regular.ttf");
+using (var font = new Font(fontPath, 10))
+{
+    Check(font.TextWidth("Hello") > 0, $"font text width = {font.TextWidth("Hello")}");
+    Pyxel.Text(2, 40, "F", Color.White, font);
+    Check(true, "text with font draws");
+}
+
+// Stage 2 slice 2: resources
+
+var shotPath = Path.Combine(Path.GetTempPath(), "pyxel_smoke_shot.png");
+Pyxel.Screenshot(shotPath);
+Check(File.Exists(shotPath), "screenshot writes a file");
+File.Delete(shotPath);
+
+var dataDir = Pyxel.UserDataDir("PyxelSharp", "HeadlessSmoke");
+Check(!string.IsNullOrEmpty(dataDir), $"user data dir = {dataDir}");
+
+var pyxresPath = Path.Combine(AppContext.BaseDirectory, "assets", "jump_game.pyxres");
+Pyxel.Load(pyxresPath);
+var bankHasPixels = false;
+foreach (var value in Pyxel.Images[0].Data)
+{
+    if (value != 0)
+    {
+        bankHasPixels = true;
+        break;
+    }
+}
+Check(bankHasPixels, "pyxres load populates image bank 0");
+
 Console.WriteLine("HeadlessSmoke: all checks passed");
 return 0;
 

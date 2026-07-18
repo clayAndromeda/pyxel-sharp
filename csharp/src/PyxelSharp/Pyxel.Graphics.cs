@@ -9,6 +9,9 @@ public static unsafe partial class Pyxel
     /// <summary>The image banks (Python: <c>pyxel.images</c>).</summary>
     public static ImageBankList Images { get; } = new();
 
+    /// <summary>The tilemap banks (Python: <c>pyxel.tilemaps</c>).</summary>
+    public static TilemapBankList Tilemaps { get; } = new();
+
     /// <summary>The screen image (Python: <c>pyxel.screen</c>). Valid after <see cref="Init"/>.</summary>
     public static Image Screen
     {
@@ -79,12 +82,12 @@ public static unsafe partial class Pyxel
     public static void Fill(float x, float y, Color color) =>
         Check(NativeMethods.pyxel_fill(x, y, color.Value));
 
-    /// <summary>Draws text with the built-in font (Python: <c>pyxel.text</c>).</summary>
-    public static void Text(float x, float y, string text, Color color)
+    /// <summary>Draws text (Python: <c>pyxel.text</c>).</summary>
+    public static void Text(float x, float y, string text, Color color, Font? font = null)
     {
         fixed (byte* textPtr = ToUtf8Required(text))
         {
-            Check(NativeMethods.pyxel_text(x, y, textPtr, color.Value));
+            Check(NativeMethods.pyxel_text(x, y, textPtr, color.Value, Font.HandleOrNull(font)));
         }
     }
 
@@ -125,6 +128,122 @@ public static unsafe partial class Pyxel
         float? rotate = null,
         float? scale = null) =>
         Blt(x, y, Images[imageBank], u, v, width, height, colorKey, rotate, scale);
+
+    /// <summary>Draws a region of a tilemap onto the screen (Python: <c>pyxel.bltm</c>).</summary>
+    public static void Bltm(
+        float x,
+        float y,
+        Tilemap tilemap,
+        float u,
+        float v,
+        float width,
+        float height,
+        Color? colorKey = null,
+        float? rotate = null,
+        float? scale = null) =>
+        Check(NativeMethods.pyxel_bltm(
+            x,
+            y,
+            tilemap.Handle,
+            u,
+            v,
+            width,
+            height,
+            ToSentinel(colorKey),
+            ToSentinel(rotate),
+            ToSentinel(scale)));
+
+    /// <summary>Draws a region of a tilemap bank onto the screen (Python: <c>pyxel.bltm</c>).</summary>
+    public static void Bltm(
+        float x,
+        float y,
+        int tilemapBank,
+        float u,
+        float v,
+        float width,
+        float height,
+        Color? colorKey = null,
+        float? rotate = null,
+        float? scale = null) =>
+        Bltm(x, y, Tilemaps[tilemapBank], u, v, width, height, colorKey, rotate, scale);
+
+    /// <summary>Perspective-projects a region of an image onto the screen (Python: <c>pyxel.blt3d</c>).</summary>
+    public static void Blt3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        Image image,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Check(NativeMethods.pyxel_blt3d(
+            x,
+            y,
+            width,
+            height,
+            image.Handle,
+            pos.X,
+            pos.Y,
+            pos.Z,
+            rot.X,
+            rot.Y,
+            rot.Z,
+            ToSentinel(fov),
+            ToSentinel(colorKey)));
+
+    /// <summary>Perspective-projects a region of an image bank onto the screen (Python: <c>pyxel.blt3d</c>).</summary>
+    public static void Blt3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        int imageBank,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Blt3d(x, y, width, height, Images[imageBank], pos, rot, fov, colorKey);
+
+    /// <summary>Perspective-projects a region of a tilemap onto the screen (Python: <c>pyxel.bltm3d</c>).</summary>
+    public static void Bltm3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        Tilemap tilemap,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Check(NativeMethods.pyxel_bltm3d(
+            x,
+            y,
+            width,
+            height,
+            tilemap.Handle,
+            pos.X,
+            pos.Y,
+            pos.Z,
+            rot.X,
+            rot.Y,
+            rot.Z,
+            ToSentinel(fov),
+            ToSentinel(colorKey)));
+
+    /// <summary>Perspective-projects a region of a tilemap bank onto the screen (Python: <c>pyxel.bltm3d</c>).</summary>
+    public static void Bltm3d(
+        float x,
+        float y,
+        float width,
+        float height,
+        int tilemapBank,
+        (float X, float Y, float Z) pos,
+        (float X, float Y, float Z) rot,
+        float? fov = null,
+        Color? colorKey = null) =>
+        Bltm3d(x, y, width, height, Tilemaps[tilemapBank], pos, rot, fov, colorKey);
 
     /// <summary>Sets the clipping region (Python: <c>pyxel.clip(x, y, w, h)</c>).</summary>
     public static void Clip(float x, float y, float width, float height) =>

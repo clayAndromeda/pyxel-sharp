@@ -10,6 +10,8 @@ use std::ffi::{c_char, c_void};
 
 use pyxel::RcImage;
 
+use crate::font::opt_font;
+use crate::tilemap::tilemap_from_handle;
 use crate::{opt_bool, opt_color, opt_f32, opt_str};
 
 pub(crate) fn image_into_handle(image: RcImage) -> *mut c_void {
@@ -518,8 +520,8 @@ pub unsafe extern "C" fn pyxel_image_fill(
 }
 
 /// # Safety
-/// `handle` must be a live handle and `text` a valid NUL-terminated UTF-8
-/// string.
+/// `handle` must be a live handle, `text` a valid NUL-terminated UTF-8
+/// string, and `font` null (built-in font) or a live font handle.
 #[no_mangle]
 pub unsafe extern "C" fn pyxel_image_text(
     handle: *const c_void,
@@ -527,6 +529,7 @@ pub unsafe extern "C" fn pyxel_image_text(
     y: f32,
     text: *const c_char,
     color: u8,
+    font: *const c_void,
 ) -> i32 {
     ffi!({
         image_from_handle(handle).borrow_mut().draw_text(
@@ -534,7 +537,122 @@ pub unsafe extern "C" fn pyxel_image_text(
             y,
             opt_str(text).unwrap_or_default(),
             color,
-            None,
+            opt_font(font),
+        );
+        Ok(())
+    })
+}
+
+/// Draws a region of a tilemap onto `handle` (Python: <c>image.bltm</c>).
+/// `colkey` uses -1 as the None sentinel, `rotate` / `scale` use NaN.
+///
+/// # Safety
+/// `handle` must be a live image handle and `tilemap` a live tilemap handle.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_image_bltm(
+    handle: *const c_void,
+    x: f32,
+    y: f32,
+    tilemap: *const c_void,
+    u: f32,
+    v: f32,
+    width: f32,
+    height: f32,
+    colkey: i32,
+    rotate: f32,
+    scale: f32,
+) -> i32 {
+    ffi!({
+        let tilemap = tilemap_from_handle(tilemap).clone();
+        image_from_handle(handle).borrow_mut().draw_tilemap(
+            x,
+            y,
+            &tilemap,
+            u,
+            v,
+            width,
+            height,
+            opt_color(colkey),
+            opt_f32(rotate),
+            opt_f32(scale),
+        );
+        Ok(())
+    })
+}
+
+/// Perspective-projects a region of a source image onto `handle`
+/// (Python: `image.blt3d`). `fov` uses NaN and `colkey` -1 as None sentinels.
+///
+/// # Safety
+/// `handle` and `source` must be live image handles.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_image_blt3d(
+    handle: *const c_void,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+    source: *const c_void,
+    pos_x: f32,
+    pos_y: f32,
+    pos_z: f32,
+    rot_x: f32,
+    rot_y: f32,
+    rot_z: f32,
+    fov: f32,
+    colkey: i32,
+) -> i32 {
+    ffi!({
+        let source = image_from_handle(source).clone();
+        image_from_handle(handle).borrow_mut().draw_image_3d(
+            x,
+            y,
+            width,
+            height,
+            &source,
+            (pos_x, pos_y, pos_z),
+            (rot_x, rot_y, rot_z),
+            opt_f32(fov),
+            opt_color(colkey),
+        );
+        Ok(())
+    })
+}
+
+/// Perspective-projects a region of a tilemap onto `handle`
+/// (Python: `image.bltm3d`). `fov` uses NaN and `colkey` -1 as None sentinels.
+///
+/// # Safety
+/// `handle` must be a live image handle and `tilemap` a live tilemap handle.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_image_bltm3d(
+    handle: *const c_void,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+    tilemap: *const c_void,
+    pos_x: f32,
+    pos_y: f32,
+    pos_z: f32,
+    rot_x: f32,
+    rot_y: f32,
+    rot_z: f32,
+    fov: f32,
+    colkey: i32,
+) -> i32 {
+    ffi!({
+        let tilemap = tilemap_from_handle(tilemap).clone();
+        image_from_handle(handle).borrow_mut().draw_tilemap_3d(
+            x,
+            y,
+            width,
+            height,
+            &tilemap,
+            (pos_x, pos_y, pos_z),
+            (rot_x, rot_y, rot_z),
+            opt_f32(fov),
+            opt_color(colkey),
         );
         Ok(())
     })

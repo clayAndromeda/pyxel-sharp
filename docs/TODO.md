@@ -24,12 +24,17 @@
 - [x] 検証: HelloPyxel サンプル (01_hello_pyxel 移植、ウィンドウ動作確認済み)
   + HeadlessSmoke に Image / エラー / パニック系 15 項目を追加 (全パス)
 
-### スライス 2: 横展開
+### スライス 2: 横展開 (2026-07-18 完了)
 
-- [ ] `Tilemap` のオペークハンドル化 + `bltm` (`ImageSource` の表現を検討)
-- [ ] `Font` (`new Font(path)` + `Pyxel.Text` / `image.Text` の font オプション引数)
-- [ ] `blt3d` / `bltm3d` (Image には未実装のまま。Tilemap と同時に)
-- [ ] リソースファイル: `Load` (.pyxres)、`user_data_dir` 等
+- [x] `Tilemap` のオペークハンドル化 + `bltm` (Tile struct + タプル暗黙変換、
+  ImageSource は null ハンドル or バンク番号の 2 引数で表現。collide 含む)
+- [x] `Font` (`new Font(path, fontSize)`、BDF/TTF + `Pyxel.Text` / `image.Text` の
+  font オプション引数 + `TextWidth`)
+- [x] `blt3d` / `bltm3d` (スクリーン + Image インスタンス両方)
+- [x] リソースファイル: `Load`/`Save` (.pyxres)、`LoadPal`/`SavePal`、
+  `Screenshot`/`Screencast`/`ResetScreencast`、`UserDataDir`
+- [x] 検証: JumpGame サンプル (02_jump_game 移植、音と rndi は Stage 3 待ちで代替)
+  + HeadlessSmoke に tilemap/font/pyxres 系 13 項目追加 (全パス)
 - [ ] 残りの graphics API の棚卸し (Python モジュール直下と Pyxel struct の差分確認)
 
 ## Stage 3: audio / math (Python 版フルパリティ)

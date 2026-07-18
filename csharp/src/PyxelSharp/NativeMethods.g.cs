@@ -78,6 +78,32 @@ namespace PyxelSharp.Native
         [DllImport(__DllName, EntryPoint = "pyxel_height", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_height(uint* out_value);
 
+        /// <summary>
+        ///  Loads a BDF or TTF font; `font_size` (NaN = default) applies to TTF.
+        ///
+        ///  # Safety
+        ///  `filename` must be a valid NUL-terminated UTF-8 string; `out_handle` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_font_new", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_font_new(byte* filename, float font_size, void** out_handle);
+
+        /// <summary>
+        ///  Releases the handle's `Rc` clone. Must be called on the pyxel thread.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; it is invalid after this call.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_font_drop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_font_drop(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle; `text` a valid NUL-terminated UTF-8
+        ///  string; `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_font_text_width", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_font_text_width(void* handle, byte* text, int* out_value);
+
         [DllImport(__DllName, EntryPoint = "pyxel_cls", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_cls(byte color);
 
@@ -123,10 +149,11 @@ namespace PyxelSharp.Native
 
         /// <summary>
         ///  # Safety
-        ///  `text` must be a valid NUL-terminated UTF-8 string.
+        ///  `text` must be a valid NUL-terminated UTF-8 string and `font` null
+        ///  (built-in font) or a live font handle.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_text", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern int pyxel_text(float x, float y, byte* text, byte color);
+        internal static extern int pyxel_text(float x, float y, byte* text, byte color, void* font);
 
         /// <summary>
         ///  Blits from a source image handle to the screen. `colkey` uses -1 as the
@@ -138,6 +165,36 @@ namespace PyxelSharp.Native
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_blt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_blt(float x, float y, void* image, float u, float v, float width, float height, int colkey, float rotate, float scale);
+
+        /// <summary>
+        ///  Draws a region of a tilemap onto the screen (Python: `pyxel.bltm`).
+        ///  `colkey` uses -1 as the None sentinel, `rotate` / `scale` use NaN.
+        ///
+        ///  # Safety
+        ///  `tilemap` must be a live tilemap handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_bltm", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_bltm(float x, float y, void* tilemap, float u, float v, float width, float height, int colkey, float rotate, float scale);
+
+        /// <summary>
+        ///  Perspective-projects a region of an image onto the screen
+        ///  (Python: `pyxel.blt3d`). `fov` uses NaN and `colkey` -1 as None sentinels.
+        ///
+        ///  # Safety
+        ///  `image` must be a live image handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_blt3d", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_blt3d(float x, float y, float width, float height, void* image, float pos_x, float pos_y, float pos_z, float rot_x, float rot_y, float rot_z, float fov, int colkey);
+
+        /// <summary>
+        ///  Perspective-projects a region of a tilemap onto the screen
+        ///  (Python: `pyxel.bltm3d`). `fov` uses NaN and `colkey` -1 as None sentinels.
+        ///
+        ///  # Safety
+        ///  `tilemap` must be a live tilemap handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_bltm3d", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_bltm3d(float x, float y, float width, float height, void* tilemap, float pos_x, float pos_y, float pos_z, float rot_x, float rot_y, float rot_z, float fov, int colkey);
 
         [DllImport(__DllName, EntryPoint = "pyxel_clip", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_clip(float x, float y, float width, float height);
@@ -404,11 +461,41 @@ namespace PyxelSharp.Native
 
         /// <summary>
         ///  # Safety
-        ///  `handle` must be a live handle and `text` a valid NUL-terminated UTF-8
-        ///  string.
+        ///  `handle` must be a live handle, `text` a valid NUL-terminated UTF-8
+        ///  string, and `font` null (built-in font) or a live font handle.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_image_text", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern int pyxel_image_text(void* handle, float x, float y, byte* text, byte color);
+        internal static extern int pyxel_image_text(void* handle, float x, float y, byte* text, byte color, void* font);
+
+        /// <summary>
+        ///  Draws a region of a tilemap onto `handle` (Python: &lt;c&gt;image.bltm&lt;/c&gt;).
+        ///  `colkey` uses -1 as the None sentinel, `rotate` / `scale` use NaN.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live image handle and `tilemap` a live tilemap handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_bltm", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_bltm(void* handle, float x, float y, void* tilemap, float u, float v, float width, float height, int colkey, float rotate, float scale);
+
+        /// <summary>
+        ///  Perspective-projects a region of a source image onto `handle`
+        ///  (Python: `image.blt3d`). `fov` uses NaN and `colkey` -1 as None sentinels.
+        ///
+        ///  # Safety
+        ///  `handle` and `source` must be live image handles.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_blt3d", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_blt3d(void* handle, float x, float y, float width, float height, void* source, float pos_x, float pos_y, float pos_z, float rot_x, float rot_y, float rot_z, float fov, int colkey);
+
+        /// <summary>
+        ///  Perspective-projects a region of a tilemap onto `handle`
+        ///  (Python: `image.bltm3d`). `fov` uses NaN and `colkey` -1 as None sentinels.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live image handle and `tilemap` a live tilemap handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_bltm3d", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_bltm3d(void* handle, float x, float y, float width, float height, void* tilemap, float pos_x, float pos_y, float pos_z, float rot_x, float rot_y, float rot_z, float fov, int colkey);
 
         /// <summary>
         ///  Blits from `source` onto `handle`. `colkey` uses -1 as the None sentinel,
@@ -476,6 +563,320 @@ namespace PyxelSharp.Native
 
         [DllImport(__DllName, EntryPoint = "pyxel_warp_mouse", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_warp_mouse(float x, float y);
+
+        /// <summary>
+        ///  Loads a .pyxres resource file. The `exclude_*` flags are `i32` opt-bools
+        ///  (-1 = None).
+        ///
+        ///  # Safety
+        ///  `filename` must be a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_load", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_load(byte* filename, int exclude_images, int exclude_tilemaps, int exclude_sounds, int exclude_musics);
+
+        /// <summary>
+        ///  Saves a .pyxres resource file. The `exclude_*` flags are `i32` opt-bools
+        ///  (-1 = None).
+        ///
+        ///  # Safety
+        ///  `filename` must be a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_save", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_save(byte* filename, int exclude_images, int exclude_tilemaps, int exclude_sounds, int exclude_musics);
+
+        /// <summary>
+        ///  # Safety
+        ///  `filename` must be a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_load_pal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_load_pal(byte* filename);
+
+        /// <summary>
+        ///  # Safety
+        ///  `filename` must be a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_save_pal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_save_pal(byte* filename);
+
+        /// <summary>
+        ///  Saves a screenshot; a null `filename` uses a timestamped desktop path.
+        ///  `scale` uses `u32::MAX` as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `filename` must be null or a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_screenshot", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_screenshot(byte* filename, uint scale);
+
+        /// <summary>
+        ///  Saves the recent frames as a GIF; a null `filename` uses a timestamped
+        ///  desktop path. `scale` uses `u32::MAX` as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `filename` must be null or a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_screencast", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_screencast(byte* filename, uint scale);
+
+        [DllImport(__DllName, EntryPoint = "pyxel_reset_screencast", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_reset_screencast();
+
+        /// <summary>
+        ///  Returns the per-user data directory for the app. The pointer written to
+        ///  `out_path` stays valid until the next string-returning call on this thread.
+        ///
+        ///  # Safety
+        ///  `vendor_name` and `app_name` must be valid NUL-terminated UTF-8 strings;
+        ///  `out_path` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_user_data_dir", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_user_data_dir(byte* vendor_name, byte* app_name, byte** out_path);
+
+        /// <summary>
+        ///  Creates a tilemap whose tiles reference either the image bank `image_index`
+        ///  (when `image` is null) or the given image handle.
+        ///
+        ///  # Safety
+        ///  `image` must be null or a live image handle; `out_handle` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_new", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_new(uint width, uint height, void* image, uint image_index, void** out_handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `filename` must be a valid NUL-terminated UTF-8 string; `out_handle` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_from_tmx", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_from_tmx(byte* filename, uint layer, void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the tilemap bank `pyxel.tilemaps[index]`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_bank", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_bank(uint index, void** out_handle);
+
+        /// <summary>
+        ///  Number of tilemap banks (`pyxel::NUM_TILEMAPS`).
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_num_tilemaps", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_num_tilemaps(uint* out_value);
+
+        /// <summary>
+        ///  Releases the handle's `Rc` clone. Must be called on the pyxel thread.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; it is invalid after this call.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_drop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_drop(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_width", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_width(void* handle, uint* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_height", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_height(void* handle, uint* out_value);
+
+        /// <summary>
+        ///  Reads the image source: bank index into `out_index` (with `out_image` set
+        ///  to null), or a new image handle into `out_image` (with `out_index` -1).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `out_index` and `out_image` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_imgsrc", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_imgsrc(void* handle, int* out_index, void** out_image);
+
+        /// <summary>
+        ///  Points the tilemap at an image bank or (non-null `image`) an image handle.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `image` null or a live image handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_set_imgsrc", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_set_imgsrc(void* handle, void* image, uint image_index);
+
+        /// <summary>
+        ///  Pointer to the tile buffer (`width * height` tiles, two u16 each).
+        ///  Valid while the tilemap is alive and its size unchanged.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_ptr` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_data_ptr", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_data_ptr(void* handle, ushort** out_ptr);
+
+        /// <summary>
+        ///  Writes rows of tile data at (x, y), like Python's `tilemap.set`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must point to `data_len` valid
+        ///  NUL-terminated UTF-8 strings.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_set", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_set(void* handle, int x, int y, byte** data, uint data_len);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `filename` a valid NUL-terminated
+        ///  UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_load", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_load(void* handle, int x, int y, byte* filename, uint layer);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_clip", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_clip(void* handle, float x, float y, float width, float height);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_clip_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_clip_reset(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_camera", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_camera(void* handle, float x, float y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_camera_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_camera_reset(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_cls", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_cls(void* handle, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle; `out_tile_x` and `out_tile_y` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_pget", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_pget(void* handle, float x, float y, ushort* out_tile_x, ushort* out_tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_pset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_pset(void* handle, float x, float y, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_line", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_line(void* handle, float x1, float y1, float x2, float y2, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_rect", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_rect(void* handle, float x, float y, float width, float height, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_rectb", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_rectb(void* handle, float x, float y, float width, float height, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_circ", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_circ(void* handle, float x, float y, float radius, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_circb", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_circb(void* handle, float x, float y, float radius, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_elli", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_elli(void* handle, float x, float y, float width, float height, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_ellib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_ellib(void* handle, float x, float y, float width, float height, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_tri", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_tri(void* handle, float x1, float y1, float x2, float y2, float x3, float y3, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_trib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_trib(void* handle, float x1, float y1, float x2, float y2, float x3, float y3, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_fill", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_fill(void* handle, float x, float y, ushort tile_x, ushort tile_y);
+
+        /// <summary>
+        ///  Slides a rect by (dx, dy) against wall tiles, returning the allowed
+        ///  movement (Python: `tilemap.collide`). `walls` is `walls_len` tiles laid
+        ///  out as u16 pairs.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `walls` must point to `walls_len * 2`
+        ///  u16 values; `out_dx` and `out_dy` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_collide", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_collide(void* handle, float x, float y, float width, float height, float dx, float dy, ushort* walls, uint walls_len, float* out_dx, float* out_dy);
+
+        /// <summary>
+        ///  Copies a region of another tilemap onto this one. `tilekey` uses a
+        ///  negative `tilekey_x` as the None sentinel; `rotate` / `scale` use NaN.
+        ///
+        ///  # Safety
+        ///  `handle` and `source` must be live tilemap handles.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tilemap_blt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tilemap_blt(void* handle, float x, float y, void* source, float u, float v, float width, float height, int tilekey_x, int tilekey_y, float rotate, float scale);
 
 
     }

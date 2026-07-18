@@ -9,10 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PyxelSharp\PyxelSharp.csproj" />
-    <!-- Test assets from the pyxel submodule's Python examples -->
-    <None Include="..\..\..\pyxel\python\pyxel\examples\assets\PixelMplus10-Regular.ttf"
-          Link="assets\PixelMplus10-Regular.ttf"
-          CopyToOutputDirectory="PreserveNewest" />
+    <!-- Resource file from the pyxel submodule's Python examples -->
     <None Include="..\..\..\pyxel\python\pyxel\examples\assets\jump_game.pyxres"
           Link="assets\jump_game.pyxres"
           CopyToOutputDirectory="PreserveNewest" />
