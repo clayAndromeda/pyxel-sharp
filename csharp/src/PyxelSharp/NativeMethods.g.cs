@@ -33,135 +33,449 @@ namespace PyxelSharp.Native
         internal static extern int pyxel_init(uint width, uint height, byte* title, uint fps, uint quit_key, uint display_scale, uint capture_scale, uint capture_sec, int headless);
 
         [DllImport(__DllName, EntryPoint = "pyxel_run", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_run(delegate* unmanaged[Cdecl]<void> update, delegate* unmanaged[Cdecl]<void> draw);
+        internal static extern int pyxel_run(delegate* unmanaged[Cdecl]<void> update, delegate* unmanaged[Cdecl]<void> draw);
 
         [DllImport(__DllName, EntryPoint = "pyxel_show", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_show();
+        internal static extern int pyxel_show();
 
         [DllImport(__DllName, EntryPoint = "pyxel_flip", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_flip();
+        internal static extern int pyxel_flip();
 
         [DllImport(__DllName, EntryPoint = "pyxel_quit", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_quit();
+        internal static extern int pyxel_quit();
 
         /// <summary>
         ///  # Safety
         ///  `title` must be a valid NUL-terminated UTF-8 string.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_title", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_title(byte* title);
+        internal static extern int pyxel_title(byte* title);
 
         [DllImport(__DllName, EntryPoint = "pyxel_fullscreen", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_fullscreen([MarshalAs(UnmanagedType.U1)] bool enabled);
+        internal static extern int pyxel_fullscreen([MarshalAs(UnmanagedType.U1)] bool enabled);
 
         [DllImport(__DllName, EntryPoint = "pyxel_perf_monitor", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_perf_monitor([MarshalAs(UnmanagedType.U1)] bool enabled);
+        internal static extern int pyxel_perf_monitor([MarshalAs(UnmanagedType.U1)] bool enabled);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_frame_count", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern uint pyxel_frame_count();
+        internal static extern int pyxel_frame_count(uint* out_value);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_width", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern uint pyxel_width();
+        internal static extern int pyxel_width(uint* out_value);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_height", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern uint pyxel_height();
+        internal static extern int pyxel_height(uint* out_value);
 
         [DllImport(__DllName, EntryPoint = "pyxel_cls", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_cls(byte color);
+        internal static extern int pyxel_cls(byte color);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_color` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_pget", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern byte pyxel_pget(float x, float y);
+        internal static extern int pyxel_pget(float x, float y, byte* out_color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_pset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_pset(float x, float y, byte color);
+        internal static extern int pyxel_pset(float x, float y, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_line", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_line(float x1, float y1, float x2, float y2, byte color);
+        internal static extern int pyxel_line(float x1, float y1, float x2, float y2, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_rect", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_rect(float x, float y, float width, float height, byte color);
+        internal static extern int pyxel_rect(float x, float y, float width, float height, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_rectb", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_rectb(float x, float y, float width, float height, byte color);
+        internal static extern int pyxel_rectb(float x, float y, float width, float height, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_circ", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_circ(float x, float y, float radius, byte color);
+        internal static extern int pyxel_circ(float x, float y, float radius, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_circb", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_circb(float x, float y, float radius, byte color);
+        internal static extern int pyxel_circb(float x, float y, float radius, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_elli", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_elli(float x, float y, float width, float height, byte color);
+        internal static extern int pyxel_elli(float x, float y, float width, float height, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_ellib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_ellib(float x, float y, float width, float height, byte color);
+        internal static extern int pyxel_ellib(float x, float y, float width, float height, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_tri", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_tri(float x1, float y1, float x2, float y2, float x3, float y3, byte color);
+        internal static extern int pyxel_tri(float x1, float y1, float x2, float y2, float x3, float y3, byte color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_trib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_trib(float x1, float y1, float x2, float y2, float x3, float y3, byte color);
+        internal static extern int pyxel_trib(float x1, float y1, float x2, float y2, float x3, float y3, byte color);
+
+        [DllImport(__DllName, EntryPoint = "pyxel_fill", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_fill(float x, float y, byte color);
 
         /// <summary>
         ///  # Safety
         ///  `text` must be a valid NUL-terminated UTF-8 string.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_text", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_text(float x, float y, byte* text, byte color);
+        internal static extern int pyxel_text(float x, float y, byte* text, byte color);
+
+        /// <summary>
+        ///  Blits from a source image handle to the screen. `colkey` uses -1 as the
+        ///  None sentinel, `rotate` / `scale` use NaN.
+        ///
+        ///  # Safety
+        ///  `image` must be a live handle returned by one of the `pyxel_image_*` /
+        ///  `pyxel_screen` constructors.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_blt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_blt(float x, float y, void* image, float u, float v, float width, float height, int colkey, float rotate, float scale);
 
         [DllImport(__DllName, EntryPoint = "pyxel_clip", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_clip(float x, float y, float width, float height);
+        internal static extern int pyxel_clip(float x, float y, float width, float height);
 
         [DllImport(__DllName, EntryPoint = "pyxel_clip_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_clip_reset();
+        internal static extern int pyxel_clip_reset();
 
         [DllImport(__DllName, EntryPoint = "pyxel_camera", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_camera(float x, float y);
+        internal static extern int pyxel_camera(float x, float y);
 
         [DllImport(__DllName, EntryPoint = "pyxel_camera_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_camera_reset();
+        internal static extern int pyxel_camera_reset();
 
         [DllImport(__DllName, EntryPoint = "pyxel_dither", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_dither(float alpha);
+        internal static extern int pyxel_dither(float alpha);
 
         [DllImport(__DllName, EntryPoint = "pyxel_pal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_pal(byte src_color, byte dst_color);
+        internal static extern int pyxel_pal(byte src_color, byte dst_color);
 
         [DllImport(__DllName, EntryPoint = "pyxel_pal_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_pal_reset();
+        internal static extern int pyxel_pal_reset();
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_new", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_new(uint width, uint height, void** out_handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `filename` must be a valid NUL-terminated UTF-8 string and `out_handle`
+        ///  must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_from_image", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_from_image(byte* filename, int include_colors, void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the image bank `pyxel.images[index]`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_bank", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_bank(uint index, void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the screen image `pyxel.screen`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_screen", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_screen(void** out_handle);
+
+        /// <summary>
+        ///  Number of image banks (`pyxel::NUM_IMAGES`).
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_num_images", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_num_images(uint* out_value);
+
+        /// <summary>
+        ///  Releases the handle's `Rc` clone. Must be called on the pyxel thread.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; it is invalid after this call.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_drop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_drop(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_width", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_width(void* handle, uint* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_height", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_height(void* handle, uint* out_value);
+
+        /// <summary>
+        ///  Pointer to the image's pixel buffer (`width * height` color indices).
+        ///  Valid while the image is alive and its size unchanged.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_ptr` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_data_ptr", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_data_ptr(void* handle, byte** out_ptr);
+
+        /// <summary>
+        ///  Writes rows of hex color digits (`data`, `data_len` strings) at (x, y),
+        ///  like Python's `image.set`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must point to `data_len` valid
+        ///  NUL-terminated UTF-8 strings.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_set", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_set(void* handle, int x, int y, byte** data, uint data_len);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `filename` a valid NUL-terminated
+        ///  UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_load", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_load(void* handle, int x, int y, byte* filename, int include_colors);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `filename` a valid NUL-terminated
+        ///  UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_save", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_save(void* handle, byte* filename, uint scale);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_clip", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_clip(void* handle, float x, float y, float width, float height);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_clip_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_clip_reset(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_camera", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_camera(void* handle, float x, float y);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_camera_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_camera_reset(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_pal", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_pal(void* handle, byte src_color, byte dst_color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_pal_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_pal_reset(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_dither", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_dither(void* handle, float alpha);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_cls", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_cls(void* handle, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_color` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_pget", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_pget(void* handle, float x, float y, byte* out_color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_pset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_pset(void* handle, float x, float y, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_line", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_line(void* handle, float x1, float y1, float x2, float y2, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_rect", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_rect(void* handle, float x, float y, float width, float height, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_rectb", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_rectb(void* handle, float x, float y, float width, float height, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_circ", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_circ(void* handle, float x, float y, float radius, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_circb", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_circb(void* handle, float x, float y, float radius, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_elli", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_elli(void* handle, float x, float y, float width, float height, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_ellib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_ellib(void* handle, float x, float y, float width, float height, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_tri", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_tri(void* handle, float x1, float y1, float x2, float y2, float x3, float y3, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_trib", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_trib(void* handle, float x1, float y1, float x2, float y2, float x3, float y3, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_fill", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_fill(void* handle, float x, float y, byte color);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `text` a valid NUL-terminated UTF-8
+        ///  string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_text", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_text(void* handle, float x, float y, byte* text, byte color);
+
+        /// <summary>
+        ///  Blits from `source` onto `handle`. `colkey` uses -1 as the None sentinel,
+        ///  `rotate` / `scale` use NaN.
+        ///
+        ///  # Safety
+        ///  `handle` and `source` must be live handles.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_image_blt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_image_blt(void* handle, float x, float y, void* source, float u, float v, float width, float height, int colkey, float rotate, float scale);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_btn", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: MarshalAs(UnmanagedType.U1)]
-        internal static extern bool pyxel_btn(uint key);
+        internal static extern int pyxel_btn(uint key, bool* out_value);
 
         /// <summary>
         ///  `hold_frames` / `repeat_frames` use `u32::MAX` as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_btnp", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: MarshalAs(UnmanagedType.U1)]
-        internal static extern bool pyxel_btnp(uint key, uint hold_frames, uint repeat_frames);
+        internal static extern int pyxel_btnp(uint key, uint hold_frames, uint repeat_frames, bool* out_value);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_btnr", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        [return: MarshalAs(UnmanagedType.U1)]
-        internal static extern bool pyxel_btnr(uint key);
+        internal static extern int pyxel_btnr(uint key, bool* out_value);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_btnv", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern int pyxel_btnv(uint key);
+        internal static extern int pyxel_btnv(uint key, int* out_value);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_mouse_x", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern int pyxel_mouse_x();
+        internal static extern int pyxel_mouse_x(int* out_value);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_mouse_y", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern int pyxel_mouse_y();
+        internal static extern int pyxel_mouse_y(int* out_value);
 
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_mouse_wheel", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern int pyxel_mouse_wheel();
+        internal static extern int pyxel_mouse_wheel(int* out_value);
 
         [DllImport(__DllName, EntryPoint = "pyxel_mouse", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_mouse([MarshalAs(UnmanagedType.U1)] bool visible);
+        internal static extern int pyxel_mouse([MarshalAs(UnmanagedType.U1)] bool visible);
 
         [DllImport(__DllName, EntryPoint = "pyxel_warp_mouse", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
-        internal static extern void pyxel_warp_mouse(float x, float y);
+        internal static extern int pyxel_warp_mouse(float x, float y);
 
 
     }

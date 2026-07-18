@@ -15,6 +15,7 @@ fn main() {
         .input_extern_file("src/lib.rs")
         .input_extern_file("src/system.rs")
         .input_extern_file("src/graphics.rs")
+        .input_extern_file("src/image.rs")
         .input_extern_file("src/input.rs")
         .csharp_dll_name("pyxel_bind_cs")
         .csharp_namespace("PyxelSharp.Native")

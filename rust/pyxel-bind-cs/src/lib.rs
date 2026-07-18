@@ -4,11 +4,36 @@
 //! a thin `extern "C"` facade over the pyxel-core singleton. Conventions:
 //! - functions are named `pyxel_` + the Python API name
 //! - `Option<u32>` parameters use `u32::MAX` as the None sentinel
+//! - `Option<f32>` parameters use NaN, `Option<Color>` uses `i32` (-1 = None)
 //! - optional strings are null pointers, optional bools are `i32` (-1 = None)
-//! - fallible functions return `i32` (0 = ok) and store the message for
-//!   `pyxel_last_error`
+//! - every fallible or panicking call returns `i32` (0 = ok) and stores the
+//!   message for `pyxel_last_error`; value getters write through out pointers
+//! - opaque handles (`Image` etc.) are `Box<Rc<RefCell<T>>>` raw pointers and
+//!   must be released with the matching `pyxel_*_drop` on the pyxel thread
+
+/// Wraps an FFI function body so that pyxel-core panics (asserts, RefCell
+/// borrow failures, …) become an error return instead of an abort. The body
+/// evaluates to `Result<(), String>`.
+macro_rules! ffi {
+    ($body:expr) => {
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+            || -> Result<(), String> { $body },
+        )) {
+            Ok(Ok(())) => 0,
+            Ok(Err(message)) => {
+                crate::set_last_error(&message);
+                -1
+            }
+            Err(payload) => {
+                crate::set_last_error(&crate::panic_message(payload.as_ref()));
+                -1
+            }
+        }
+    };
+}
 
 mod graphics;
+mod image;
 mod input;
 mod system;
 
@@ -21,6 +46,22 @@ pub(crate) fn opt_u32(value: u32) -> Option<u32> {
     (value != NONE_U32).then_some(value)
 }
 
+pub(crate) fn opt_f32(value: f32) -> Option<f32> {
+    (!value.is_nan()).then_some(value)
+}
+
+pub(crate) fn opt_color(value: i32) -> Option<u8> {
+    (value >= 0).then_some(value as u8)
+}
+
+pub(crate) fn opt_bool(value: i32) -> Option<bool> {
+    match value {
+        -1 => None,
+        0 => Some(false),
+        _ => Some(true),
+    }
+}
+
 /// # Safety
 /// `ptr` must be null or point to a valid NUL-terminated UTF-8 string.
 pub(crate) unsafe fn opt_str<'a>(ptr: *const c_char) -> Option<&'a str> {
@@ -28,6 +69,16 @@ pub(crate) unsafe fn opt_str<'a>(ptr: *const c_char) -> Option<&'a str> {
         None
     } else {
         Some(CStr::from_ptr(ptr).to_str().expect("invalid UTF-8 string"))
+    }
+}
+
+pub(crate) fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
+    if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_string()
+    } else if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone()
+    } else {
+        "panic in pyxel-core".to_string()
     }
 }
 

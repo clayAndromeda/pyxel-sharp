@@ -2,6 +2,7 @@
   <Folder Name="/samples/">
     <Project Path="samples/BouncingBall/BouncingBall.csproj" />
     <Project Path="samples/HeadlessSmoke/HeadlessSmoke.csproj" />
+    <Project Path="samples/HelloPyxel/HelloPyxel.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PyxelSharp/PyxelSharp.csproj" />
