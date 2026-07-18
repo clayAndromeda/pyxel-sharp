@@ -1,15 +1,8 @@
 //! Resource FFI: .pyxres load/save, palettes, captures, and user data dir.
 
-use std::cell::RefCell;
-use std::ffi::{c_char, CString};
+use std::ffi::c_char;
 
-use crate::{opt_bool, opt_str, opt_u32};
-
-thread_local! {
-    // Backing storage for string results (pyxel_user_data_dir); the returned
-    // pointer stays valid until the next string-returning call on this thread.
-    static STRING_RESULT: RefCell<CString> = RefCell::new(CString::default());
-}
+use crate::{opt_bool, opt_str, opt_u32, set_string_result};
 
 /// Loads a .pyxres resource file. The `exclude_*` flags are `i32` opt-bools
 /// (-1 = None).
@@ -132,11 +125,7 @@ pub unsafe extern "C" fn pyxel_user_data_dir(
             opt_str(vendor_name).unwrap_or_default(),
             opt_str(app_name).unwrap_or_default(),
         )?;
-        let c_path = CString::new(path).unwrap_or_default();
-        STRING_RESULT.with(|slot| {
-            *slot.borrow_mut() = c_path;
-            *out_path = slot.borrow().as_ptr();
-        });
+        *out_path = set_string_result(path);
         Ok(())
     })
 }

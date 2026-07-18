@@ -35,14 +35,24 @@
   `Screenshot`/`Screencast`/`ResetScreencast`、`UserDataDir`
 - [x] 検証: JumpGame サンプル (02_jump_game 移植、音と rndi は Stage 3 待ちで代替)
   + HeadlessSmoke に tilemap/font/pyxres 系 13 項目追加 (全パス)
-- [ ] 残りの graphics API の棚卸し (Python モジュール直下と Pyxel struct の差分確認)
+- [x] 残りの graphics / system API の棚卸し (2026-07-18 完了):
+  `Colors` (表示パレット)、`Cursor`/`FontImage`、`Reset`/`Icon`/`IntegerScale`/
+  `ScreenMode`/`Resize` を追加
 
-## Stage 3: audio / math (Python 版フルパリティ)
+## Stage 3: audio / math (2026-07-18 完了)
 
-- [ ] `Sound` / `Music` / `Channel` / `Tone` のハンドル化
-- [ ] `Play` / `Playm` / `Stop` / MML (`sound.Mml(...)`)
-- [ ] math モジュール (`Rndi` / `Rndf` / `Noise` / `Atan2` 等)
-- [ ] 入力の残り: `input_text` / `dropped_files`
+- [x] `Sound` / `Music` / `Channel` / `Tone` のハンドル化
+  (Arc<Mutex> なので drop はスレッド不問・即時。配列プロパティはコピー交換)
+- [x] `Play` (バンク番号/配列/Sound/Sound[]/MML のオーバーロード) / `Playm` /
+  `Stop` / `PlayPos` / `sound.Mml(...)`
+- [x] math モジュール (`Rndi`/`Rndf`/`Rseed`/`Nseed`/`Noise`/`Atan2`/`Sin`/`Cos`/
+  `Sqrt`/`Ceil`/`Floor`。`clamp`/`sgn` は C# 標準 (`Math.Clamp`/`Math.Sign`) で代替)
+- [x] 入力の残り: `InputText` / `InputKeys` / `DroppedFiles` + テスト用 `SetBtn`/
+  `SetBtnv`/`SetMousePos`/`SetInputText`/`SetDroppedFiles`
+- [x] 検証: JumpGame の音 (`Play`/`Playm`) と `Rndi` を本物に差し替え (動作確認済み)
+  + HeadlessSmoke に math/audio/input/colors 系 27 項目追加 (全パス)
+- 未対応 (意図的スキップ): `gen_bgm`、deprecated API 群 (old_mml、
+  `Tone.noise`/`waveform`、`channel(n)`/`sound(n)`/`music(n)` 等)
 - [ ] Python サンプル (pyxel/python/pyxel/examples 01〜) の移植で網羅検証
 
 ## インフラ / 配布

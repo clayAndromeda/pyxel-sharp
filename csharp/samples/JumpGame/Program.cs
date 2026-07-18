@@ -1,14 +1,10 @@
 // Port of the official 02_jump_game.py example.
-// pyxel.play/playm calls are omitted (audio lands in Stage 3) and pyxel.rndi
-// is substituted with System.Random until the math module is bound.
 using PyxelSharp;
 
 new App();
 
 class App
 {
-    private readonly Random _random = new();
-
     private int _score;
     private float _playerX = 72;
     private float _playerY = -16;
@@ -29,14 +25,13 @@ class App
         _fruit = new (float, float, int, bool)[4];
         for (var i = 0; i < 4; i++)
         {
-            _floor[i] = (i * 60, Rndi(8, 104), true);
-            _fruit[i] = (i * 60, Rndi(0, 104), Rndi(0, 2), true);
+            _floor[i] = (i * 60, Pyxel.Rndi(8, 104), true);
+            _fruit[i] = (i * 60, Pyxel.Rndi(0, 104), Pyxel.Rndi(0, 2), true);
         }
 
+        Pyxel.Playm(0, loop: true);
         Pyxel.Run(Update, Draw);
     }
-
-    private int Rndi(int min, int max) => _random.Next(min, max + 1);
 
     private void Update()
     {
@@ -77,6 +72,7 @@ class App
             if (_isAlive)
             {
                 _isAlive = false;
+                Pyxel.Play(3, 5);
             }
 
             if (_playerY > 600)
@@ -105,6 +101,7 @@ class App
                 isAlive = false;
                 _score += 10;
                 _playerDy = -12;
+                Pyxel.Play(3, 3);
             }
         }
         else
@@ -117,7 +114,7 @@ class App
         if (x < -40)
         {
             x += 240;
-            y = Rndi(8, 104);
+            y = Pyxel.Rndi(8, 104);
             isAlive = true;
         }
 
@@ -134,6 +131,7 @@ class App
             isAlive = false;
             _score += (kind + 1) * 100;
             _playerDy = Math.Min(_playerDy, -8);
+            Pyxel.Play(3, 4);
         }
 
         x -= 2;
@@ -141,8 +139,8 @@ class App
         if (x < -40)
         {
             x += 240;
-            y = Rndi(0, 104);
-            kind = Rndi(0, 2);
+            y = Pyxel.Rndi(0, 104);
+            kind = Pyxel.Rndi(0, 2);
             isAlive = true;
         }
 

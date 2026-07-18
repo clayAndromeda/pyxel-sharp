@@ -78,6 +78,63 @@ pub extern "C" fn pyxel_quit() -> i32 {
     })
 }
 
+/// Restarts the application (Python: `pyxel.reset`).
+#[no_mangle]
+pub extern "C" fn pyxel_reset() -> i32 {
+    ffi!({
+        Pyxel::restart();
+        Ok(())
+    })
+}
+
+/// Sets the window icon from rows of hex color digits
+/// (Python: `pyxel.icon`). `colkey` uses -1 as the None sentinel.
+///
+/// # Safety
+/// `data` must point to `data_len` valid NUL-terminated UTF-8 strings.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_icon(
+    data: *const *const c_char,
+    data_len: u32,
+    scale: u32,
+    colkey: i32,
+) -> i32 {
+    ffi!({
+        let rows: Vec<&str> = (0..data_len as usize)
+            .map(|i| opt_str(*data.add(i)).unwrap_or_default())
+            .collect();
+        pyxel::pyxel().set_icon(&rows, scale, crate::opt_color(colkey))?;
+        Ok(())
+    })
+}
+
+/// Restricts display scaling to integer factors (Python: `pyxel.integer_scale`).
+#[no_mangle]
+pub extern "C" fn pyxel_integer_scale(enabled: bool) -> i32 {
+    ffi!({
+        pyxel::pyxel().set_integer_scale(enabled);
+        Ok(())
+    })
+}
+
+/// Switches the screen shader mode (Python: `pyxel.screen_mode`).
+#[no_mangle]
+pub extern "C" fn pyxel_screen_mode(screen_mode: u32) -> i32 {
+    ffi!({
+        pyxel::pyxel().set_screen_mode(screen_mode);
+        Ok(())
+    })
+}
+
+/// Resizes the screen (Python: `pyxel.resize`).
+#[no_mangle]
+pub extern "C" fn pyxel_resize(width: u32, height: u32) -> i32 {
+    ffi!({
+        pyxel::pyxel().set_screen_size(width, height)?;
+        Ok(())
+    })
+}
+
 /// # Safety
 /// `title` must be a valid NUL-terminated UTF-8 string.
 #[no_mangle]

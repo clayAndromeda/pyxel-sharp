@@ -5,12 +5,17 @@ namespace PyxelSharp;
 public static unsafe partial class Pyxel
 {
     private static Image? _screen;
+    private static Image? _cursor;
+    private static Image? _fontImage;
 
     /// <summary>The image banks (Python: <c>pyxel.images</c>).</summary>
     public static ImageBankList Images { get; } = new();
 
     /// <summary>The tilemap banks (Python: <c>pyxel.tilemaps</c>).</summary>
     public static TilemapBankList Tilemaps { get; } = new();
+
+    /// <summary>The display palette, 0xRRGGBB per entry (Python: <c>pyxel.colors</c>).</summary>
+    public static ColorPalette Colors { get; } = new();
 
     /// <summary>The screen image (Python: <c>pyxel.screen</c>). Valid after <see cref="Init"/>.</summary>
     public static Image Screen
@@ -24,6 +29,36 @@ public static unsafe partial class Pyxel
                 _screen = new Image(handle, isAppLifetime: true);
             }
             return _screen;
+        }
+    }
+
+    /// <summary>The mouse cursor image (Python: <c>pyxel.cursor</c>). Valid after <see cref="Init"/>.</summary>
+    public static Image Cursor
+    {
+        get
+        {
+            if (_cursor is null)
+            {
+                void* handle;
+                Check(NativeMethods.pyxel_cursor_image(&handle));
+                _cursor = new Image(handle, isAppLifetime: true);
+            }
+            return _cursor;
+        }
+    }
+
+    /// <summary>The built-in font image (Python: <c>pyxel.font</c>). Valid after <see cref="Init"/>.</summary>
+    public static Image FontImage
+    {
+        get
+        {
+            if (_fontImage is null)
+            {
+                void* handle;
+                Check(NativeMethods.pyxel_font_image(&handle));
+                _fontImage = new Image(handle, isAppLifetime: true);
+            }
+            return _fontImage;
         }
     }
 
@@ -267,4 +302,33 @@ public static unsafe partial class Pyxel
 
     /// <summary>Resets the palette mapping (Python: <c>pyxel.pal()</c>).</summary>
     public static void Pal() => Check(NativeMethods.pyxel_pal_reset());
+}
+
+/// <summary>The display palette, 0xRRGGBB per entry (Python: <c>pyxel.colors</c>).</summary>
+public sealed unsafe class ColorPalette
+{
+    internal ColorPalette()
+    {
+    }
+
+    public int Count
+    {
+        get
+        {
+            uint count;
+            Pyxel.Check(NativeMethods.pyxel_colors_len(&count));
+            return (int)count;
+        }
+    }
+
+    public uint this[int index]
+    {
+        get
+        {
+            uint rgb;
+            Pyxel.Check(NativeMethods.pyxel_colors_get((uint)index, &rgb));
+            return rgb;
+        }
+        set => Pyxel.Check(NativeMethods.pyxel_colors_set((uint)index, value));
+    }
 }

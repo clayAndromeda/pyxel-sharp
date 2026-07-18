@@ -45,6 +45,40 @@ namespace PyxelSharp.Native
         internal static extern int pyxel_quit();
 
         /// <summary>
+        ///  Restarts the application (Python: `pyxel.reset`).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_reset", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_reset();
+
+        /// <summary>
+        ///  Sets the window icon from rows of hex color digits
+        ///  (Python: `pyxel.icon`). `colkey` uses -1 as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `data` must point to `data_len` valid NUL-terminated UTF-8 strings.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_icon", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_icon(byte** data, uint data_len, uint scale, int colkey);
+
+        /// <summary>
+        ///  Restricts display scaling to integer factors (Python: `pyxel.integer_scale`).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_integer_scale", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_integer_scale([MarshalAs(UnmanagedType.U1)] bool enabled);
+
+        /// <summary>
+        ///  Switches the screen shader mode (Python: `pyxel.screen_mode`).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_screen_mode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_screen_mode(uint screen_mode);
+
+        /// <summary>
+        ///  Resizes the screen (Python: `pyxel.resize`).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_resize", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_resize(uint width, uint height);
+
+        /// <summary>
         ///  # Safety
         ///  `title` must be a valid NUL-terminated UTF-8 string.
         /// </summary>
@@ -77,6 +111,161 @@ namespace PyxelSharp.Native
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_height", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_height(uint* out_value);
+
+        /// <summary>
+        ///  Plays sound bank indices on channel `ch` (Python: `pyxel.play`).
+        ///  `sec` uses NaN as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `sounds` must point to `sounds_len` u32 values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_play", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_play(uint ch, uint* sounds, uint sounds_len, float sec, [MarshalAs(UnmanagedType.U1)] bool should_loop, [MarshalAs(UnmanagedType.U1)] bool resume);
+
+        /// <summary>
+        ///  Plays sound handles on channel `ch` (Python: `pyxel.play` with Sound
+        ///  objects). `sec` uses NaN as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `sounds` must point to `sounds_len` live sound handles.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_play_handles", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_play_handles(uint ch, void** sounds, uint sounds_len, float sec, [MarshalAs(UnmanagedType.U1)] bool should_loop, [MarshalAs(UnmanagedType.U1)] bool resume);
+
+        /// <summary>
+        ///  Plays MML code on channel `ch` (Python: `pyxel.play` with a string).
+        ///  `sec` uses NaN as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `code` must be a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_play_mml", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_play_mml(uint ch, byte* code, float sec, [MarshalAs(UnmanagedType.U1)] bool should_loop, [MarshalAs(UnmanagedType.U1)] bool resume);
+
+        /// <summary>
+        ///  Plays music bank `msc` (Python: `pyxel.playm`). `sec` uses NaN as the
+        ///  None sentinel.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_playm", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_playm(uint msc, float sec, [MarshalAs(UnmanagedType.U1)] bool should_loop);
+
+        /// <summary>
+        ///  Stops channel `ch`, or every channel when `ch` is negative
+        ///  (Python: `pyxel.stop`).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_stop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_stop(int ch);
+
+        /// <summary>
+        ///  Current (sound index, seconds) of channel `ch`; `out_has_value` is false
+        ///  when nothing is playing (Python: `pyxel.play_pos`).
+        ///
+        ///  # Safety
+        ///  The out pointers must be writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_play_pos", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_play_pos(uint ch, uint* out_sound_index, float* out_sec, bool* out_has_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_new", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_new(void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the mixer channel `pyxel.channels[index]`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_bank", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_bank(uint index, void** out_handle);
+
+        /// <summary>
+        ///  Number of mixer channels (`pyxel::NUM_CHANNELS`).
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_num_channels", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_num_channels(uint* out_value);
+
+        /// <summary>
+        ///  Releases the handle's `Arc` clone (safe from any thread).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; it is invalid after this call.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_drop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_drop(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_gain", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_gain(void* handle, float* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_set_gain", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_set_gain(void* handle, float gain);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_detune", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_detune(void* handle, int* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_set_detune", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_set_detune(void* handle, int detune);
+
+        /// <summary>
+        ///  Plays `sounds_len` sound handles in order (Python: `channel.play`).
+        ///  `sec` uses NaN as the None sentinel.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live channel handle; `sounds` must point to
+        ///  `sounds_len` live sound handles.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_play", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_play(void* handle, void** sounds, uint sounds_len, float sec, [MarshalAs(UnmanagedType.U1)] bool should_loop, [MarshalAs(UnmanagedType.U1)] bool resume);
+
+        /// <summary>
+        ///  Plays MML code (Python: `channel.play(mml)`). `sec` uses NaN as the None
+        ///  sentinel.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live channel handle and `code` valid NUL-terminated
+        ///  UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_play_mml", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_play_mml(void* handle, byte* code, float sec, [MarshalAs(UnmanagedType.U1)] bool should_loop, [MarshalAs(UnmanagedType.U1)] bool resume);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live channel handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_stop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_stop(void* handle);
+
+        /// <summary>
+        ///  Current (sound index, seconds) of playback; `out_has_value` is false when
+        ///  nothing is playing (Python: `channel.play_pos`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live channel handle; the out pointers writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_channel_play_pos", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_channel_play_pos(void* handle, uint* out_sound_index, float* out_sec, bool* out_has_value);
 
         /// <summary>
         ///  Loads a BDF or TTF font; `font_size` (NaN = default) applies to TTF.
@@ -218,6 +407,32 @@ namespace PyxelSharp.Native
         internal static extern int pyxel_pal_reset();
 
         /// <summary>
+        ///  Number of display palette entries (Python: `len(pyxel.colors)`).
+        ///
+        ///  # Safety
+        ///  `out_len` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_colors_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_colors_len(uint* out_len);
+
+        /// <summary>
+        ///  Reads display palette entry `index` as 0xRRGGBB
+        ///  (Python: `pyxel.colors[i]`).
+        ///
+        ///  # Safety
+        ///  `out_rgb` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_colors_get", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_colors_get(uint index, uint* out_rgb);
+
+        /// <summary>
+        ///  Writes display palette entry `index` as 0xRRGGBB
+        ///  (Python: `pyxel.colors[i] = rgb`).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_colors_set", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_colors_set(uint index, uint rgb);
+
+        /// <summary>
         ///  # Safety
         ///  `out_handle` must point to writable memory.
         /// </summary>
@@ -249,6 +464,24 @@ namespace PyxelSharp.Native
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_screen", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_screen(void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the mouse cursor image `pyxel.cursor`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_cursor_image", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_cursor_image(void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the built-in font image `pyxel.font`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_font_image", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_font_image(void** out_handle);
 
         /// <summary>
         ///  Number of image banks (`pyxel::NUM_IMAGES`).
@@ -565,6 +798,269 @@ namespace PyxelSharp.Native
         internal static extern int pyxel_warp_mouse(float x, float y);
 
         /// <summary>
+        ///  Text typed since the last frame (Python: `pyxel.input_text`). The pointer
+        ///  written to `out_text` stays valid until the next string-returning call on
+        ///  this thread.
+        ///
+        ///  # Safety
+        ///  `out_text` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_input_text", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_input_text(byte** out_text);
+
+        /// <summary>
+        ///  Number of keys currently held (Python: `len(pyxel.input_keys)`).
+        ///
+        ///  # Safety
+        ///  `out_len` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_input_keys_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_input_keys_len(uint* out_len);
+
+        /// <summary>
+        ///  Copies up to `buffer_len` held key codes into `buffer`
+        ///  (Python: `pyxel.input_keys`).
+        ///
+        ///  # Safety
+        ///  `buffer` must hold `buffer_len` u32 values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_input_keys_read", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_input_keys_read(uint* buffer, uint buffer_len);
+
+        /// <summary>
+        ///  Number of files dropped onto the window this frame
+        ///  (Python: `len(pyxel.dropped_files)`).
+        ///
+        ///  # Safety
+        ///  `out_len` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_dropped_files_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_dropped_files_len(uint* out_len);
+
+        /// <summary>
+        ///  Path of dropped file `index` (Python: `pyxel.dropped_files[i]`). The
+        ///  pointer written to `out_path` stays valid until the next string-returning
+        ///  call on this thread.
+        ///
+        ///  # Safety
+        ///  `out_path` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_dropped_file", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_dropped_file(uint index, byte** out_path);
+
+        /// <summary>
+        ///  Overrides a key state for the current frame (Python: `pyxel.set_btn`,
+        ///  mainly for tests).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_set_btn", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_set_btn(uint key, [MarshalAs(UnmanagedType.U1)] bool state);
+
+        /// <summary>
+        ///  Overrides an analog key value for the current frame
+        ///  (Python: `pyxel.set_btnv`).
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_set_btnv", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_set_btnv(uint key, int value);
+
+        /// <summary>
+        ///  Overrides the typed text for the current frame
+        ///  (Python: `pyxel.set_input_text`).
+        ///
+        ///  # Safety
+        ///  `text` must be a valid NUL-terminated UTF-8 string.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_set_input_text", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_set_input_text(byte* text);
+
+        /// <summary>
+        ///  Overrides the dropped-file list for the current frame
+        ///  (Python: `pyxel.set_dropped_files`).
+        ///
+        ///  # Safety
+        ///  `files` must point to `files_len` valid NUL-terminated UTF-8 strings.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_set_dropped_files", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_set_dropped_files(byte** files, uint files_len);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_ceil", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_ceil(float x, int* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_floor", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_floor(float x, int* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sqrt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sqrt(float x, float* out_value);
+
+        /// <summary>
+        ///  Sine of an angle in degrees.
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sin", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sin(float deg, float* out_value);
+
+        /// <summary>
+        ///  Cosine of an angle in degrees.
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_cos", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_cos(float deg, float* out_value);
+
+        /// <summary>
+        ///  Arctangent of y/x in degrees.
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_atan2", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_atan2(float y, float x, float* out_value);
+
+        [DllImport(__DllName, EntryPoint = "pyxel_rseed", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_rseed(uint seed);
+
+        /// <summary>
+        ///  Random integer in [a, b].
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_rndi", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_rndi(int a, int b, int* out_value);
+
+        /// <summary>
+        ///  Random float in [a, b].
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_rndf", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_rndf(float a, float b, float* out_value);
+
+        [DllImport(__DllName, EntryPoint = "pyxel_nseed", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_nseed(uint seed);
+
+        /// <summary>
+        ///  Perlin noise at (x, y, z).
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_noise", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_noise(float x, float y, float z, float* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_new", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_new(void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the music bank `pyxel.musics[index]`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_bank", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_bank(uint index, void** out_handle);
+
+        /// <summary>
+        ///  Number of music banks (`pyxel::NUM_MUSICS`).
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_num_musics", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_num_musics(uint* out_value);
+
+        /// <summary>
+        ///  Releases the handle's `Arc` clone (safe from any thread).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; it is invalid after this call.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_drop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_drop(void* handle);
+
+        /// <summary>
+        ///  Number of sequences (Python: `len(music.seqs)`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_len` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_seqs_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_seqs_len(void* handle, uint* out_len);
+
+        /// <summary>
+        ///  Length of sequence `index`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_len` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_seq_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_seq_len(void* handle, uint index, uint* out_len);
+
+        /// <summary>
+        ///  Copies up to `buffer_len` sound indices of sequence `index` into `buffer`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `buffer` must hold `buffer_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_seq_read", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_seq_read(void* handle, uint index, uint* buffer, uint buffer_len);
+
+        /// <summary>
+        ///  Replaces sequence `index` with `data_len` sound indices from `data`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must hold `data_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_seq_write", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_seq_write(void* handle, uint index, uint* data, uint data_len);
+
+        /// <summary>
+        ///  Removes all sequences.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_seqs_clear", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_seqs_clear(void* handle);
+
+        /// <summary>
+        ///  Appends a sequence of `data_len` sound indices.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must hold `data_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_seqs_append", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_seqs_append(void* handle, uint* data, uint data_len);
+
+        /// <summary>
+        ///  Renders `sec` seconds to a WAV file (Python: `music.save`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle and `filename` valid NUL-terminated UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_music_save", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_music_save(void* handle, byte* filename, float sec, int ffmpeg);
+
+        /// <summary>
         ///  Loads a .pyxres resource file. The `exclude_*` flags are `i32` opt-bools
         ///  (-1 = None).
         ///
@@ -631,6 +1127,231 @@ namespace PyxelSharp.Native
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_user_data_dir", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_user_data_dir(byte* vendor_name, byte* app_name, byte** out_path);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_new", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_new(void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the sound bank `pyxel.sounds[index]`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_bank", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_bank(uint index, void** out_handle);
+
+        /// <summary>
+        ///  Number of sound banks (`pyxel::NUM_SOUNDS`).
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_num_sounds", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_num_sounds(uint* out_value);
+
+        /// <summary>
+        ///  Releases the handle's `Arc` clone (safe from any thread).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; it is invalid after this call.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_drop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_drop(void* handle);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_len` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_notes_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_notes_len(void* handle, uint* out_len);
+
+        /// <summary>
+        ///  Copies up to `buffer_len` notes into `buffer`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `buffer` must hold `buffer_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_notes_read", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_notes_read(void* handle, sbyte* buffer, uint buffer_len);
+
+        /// <summary>
+        ///  Replaces the note list with `data_len` values from `data`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must hold `data_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_notes_write", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_notes_write(void* handle, sbyte* data, uint data_len);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_len` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_tones_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_tones_len(void* handle, uint* out_len);
+
+        /// <summary>
+        ///  Copies up to `buffer_len` tone indices into `buffer`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `buffer` must hold `buffer_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_tones_read", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_tones_read(void* handle, byte* buffer, uint buffer_len);
+
+        /// <summary>
+        ///  Replaces the tone list with `data_len` values from `data`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must hold `data_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_tones_write", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_tones_write(void* handle, byte* data, uint data_len);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_len` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_volumes_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_volumes_len(void* handle, uint* out_len);
+
+        /// <summary>
+        ///  Copies up to `buffer_len` volumes into `buffer`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `buffer` must hold `buffer_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_volumes_read", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_volumes_read(void* handle, byte* buffer, uint buffer_len);
+
+        /// <summary>
+        ///  Replaces the volume list with `data_len` values from `data`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must hold `data_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_volumes_write", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_volumes_write(void* handle, byte* data, uint data_len);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_len` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_effects_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_effects_len(void* handle, uint* out_len);
+
+        /// <summary>
+        ///  Copies up to `buffer_len` effects into `buffer`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `buffer` must hold `buffer_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_effects_read", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_effects_read(void* handle, byte* buffer, uint buffer_len);
+
+        /// <summary>
+        ///  Replaces the effect list with `data_len` values from `data`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must hold `data_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_effects_write", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_effects_write(void* handle, byte* data, uint data_len);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_speed", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_speed(void* handle, ushort* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_set_speed", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_set_speed(void* handle, ushort speed);
+
+        /// <summary>
+        ///  Sets all components from their string notations (Python: `sound.set`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; the strings must be valid NUL-terminated
+        ///  UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_set", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_set(void* handle, byte* notes, byte* tones, byte* volumes, byte* effects, ushort speed);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `notes` valid NUL-terminated UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_set_notes", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_set_notes(void* handle, byte* notes);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `tones` valid NUL-terminated UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_set_tones", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_set_tones(void* handle, byte* tones);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `volumes` valid NUL-terminated UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_set_volumes", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_set_volumes(void* handle, byte* volumes);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `effects` valid NUL-terminated UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_set_effects", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_set_effects(void* handle, byte* effects);
+
+        /// <summary>
+        ///  Sets the MML code, or clears it when `code` is null (Python: `sound.mml`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `code` null or valid NUL-terminated UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_mml", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_mml(void* handle, byte* code);
+
+        /// <summary>
+        ///  Loads a PCM file, or clears the PCM data when `filename` is null
+        ///  (Python: `sound.pcm`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `filename` null or valid NUL-terminated
+        ///  UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_pcm", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_pcm(void* handle, byte* filename);
+
+        /// <summary>
+        ///  Renders `sec` seconds to a WAV file (Python: `sound.save`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle and `filename` valid NUL-terminated UTF-8.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_save", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_save(void* handle, byte* filename, float sec, int ffmpeg);
+
+        /// <summary>
+        ///  Playback length in seconds; `out_has_value` is false when unknown
+        ///  (Python: `sound.total_sec`).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `out_value` and `out_has_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_sound_total_sec", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_sound_total_sec(void* handle, float* out_value, bool* out_has_value);
 
         /// <summary>
         ///  Creates a tilemap whose tiles reference either the image bank `image_index`
@@ -877,6 +1598,109 @@ namespace PyxelSharp.Native
         /// </summary>
         [DllImport(__DllName, EntryPoint = "pyxel_tilemap_blt", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
         internal static extern int pyxel_tilemap_blt(void* handle, float x, float y, void* source, float u, float v, float width, float height, int tilekey_x, int tilekey_y, float rotate, float scale);
+
+        /// <summary>
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_new", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_new(void** out_handle);
+
+        /// <summary>
+        ///  Returns a handle to the tone bank `pyxel.tones[index]`.
+        ///
+        ///  # Safety
+        ///  `out_handle` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_bank", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_bank(uint index, void** out_handle);
+
+        /// <summary>
+        ///  Number of tone banks (`pyxel::NUM_TONES`).
+        ///
+        ///  # Safety
+        ///  `out_value` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_num_tones", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_num_tones(uint* out_value);
+
+        /// <summary>
+        ///  Releases the handle's `Arc` clone (safe from any thread).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; it is invalid after this call.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_drop", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_drop(void* handle);
+
+        /// <summary>
+        ///  Tone mode (0 = wavetable, 1 = short-period noise, 2 = long-period noise).
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_mode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_mode(void* handle, uint* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_set_mode", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_set_mode(void* handle, uint mode);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_sample_bits", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_sample_bits(void* handle, uint* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_set_sample_bits", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_set_sample_bits(void* handle, uint sample_bits);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_value` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_gain", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_gain(void* handle, float* out_value);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_set_gain", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_set_gain(void* handle, float gain);
+
+        /// <summary>
+        ///  # Safety
+        ///  `handle` must be a live handle and `out_len` writable.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_wavetable_len", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_wavetable_len(void* handle, uint* out_len);
+
+        /// <summary>
+        ///  Copies up to `buffer_len` wavetable samples into `buffer`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `buffer` must hold `buffer_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_wavetable_read", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_wavetable_read(void* handle, uint* buffer, uint buffer_len);
+
+        /// <summary>
+        ///  Replaces the wavetable with `data_len` samples from `data`.
+        ///
+        ///  # Safety
+        ///  `handle` must be a live handle; `data` must hold `data_len` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_tone_wavetable_write", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_tone_wavetable_write(void* handle, uint* data, uint data_len);
 
 
     }

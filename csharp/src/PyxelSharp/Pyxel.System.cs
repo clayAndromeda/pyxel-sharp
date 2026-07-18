@@ -31,6 +31,10 @@ public static unsafe partial class Pyxel
         Image,
         Tilemap,
         Font,
+        Sound,
+        Music,
+        Channel,
+        Tone,
     }
 
     /// <summary>Initializes the Pyxel window and singleton. Call once, before anything else.</summary>
@@ -85,6 +89,46 @@ public static unsafe partial class Pyxel
     }
 
     public static void Quit() => Check(NativeMethods.pyxel_quit());
+
+    /// <summary>Restarts the application (Python: <c>pyxel.reset</c>).</summary>
+    public static void Reset() => Check(NativeMethods.pyxel_reset());
+
+    /// <summary>Sets the window icon from rows of hex color digits (Python: <c>pyxel.icon</c>).</summary>
+    public static void Icon(string[] data, int scale, Color? colorKey = null)
+    {
+        var pointers = new IntPtr[data.Length];
+        try
+        {
+            for (var i = 0; i < data.Length; i++)
+            {
+                pointers[i] = Marshal.StringToCoTaskMemUTF8(data[i]);
+            }
+            fixed (IntPtr* pointersPtr = pointers)
+            {
+                Check(NativeMethods.pyxel_icon(
+                    (byte**)pointersPtr, (uint)data.Length, (uint)scale, ToSentinel(colorKey)));
+            }
+        }
+        finally
+        {
+            foreach (var pointer in pointers)
+            {
+                Marshal.FreeCoTaskMem(pointer);
+            }
+        }
+    }
+
+    /// <summary>Restricts display scaling to integer factors (Python: <c>pyxel.integer_scale</c>).</summary>
+    public static void IntegerScale(bool enabled) =>
+        Check(NativeMethods.pyxel_integer_scale(enabled));
+
+    /// <summary>Switches the screen shader mode (Python: <c>pyxel.screen_mode</c>).</summary>
+    public static void ScreenMode(int screenMode) =>
+        Check(NativeMethods.pyxel_screen_mode((uint)screenMode));
+
+    /// <summary>Resizes the screen (Python: <c>pyxel.resize</c>).</summary>
+    public static void Resize(int width, int height) =>
+        Check(NativeMethods.pyxel_resize((uint)width, (uint)height));
 
     public static void Title(string title)
     {
@@ -162,7 +206,11 @@ public static unsafe partial class Pyxel
 
     internal static void ReleaseHandle(IntPtr handle, HandleKind kind)
     {
-        if (Environment.CurrentManagedThreadId == _pyxelThreadId)
+        // Audio handles wrap Arc<Mutex<_>> and may be dropped from any thread;
+        // only the Rc-based graphics handles need the pyxel-thread queue.
+        var isThreadSafe = kind is HandleKind.Sound or HandleKind.Music
+            or HandleKind.Channel or HandleKind.Tone;
+        if (isThreadSafe || Environment.CurrentManagedThreadId == _pyxelThreadId)
         {
             DropHandle(handle, kind);
         }
@@ -193,6 +241,18 @@ public static unsafe partial class Pyxel
             case HandleKind.Font:
                 NativeMethods.pyxel_font_drop((void*)handle);
                 break;
+            case HandleKind.Sound:
+                NativeMethods.pyxel_sound_drop((void*)handle);
+                break;
+            case HandleKind.Music:
+                NativeMethods.pyxel_music_drop((void*)handle);
+                break;
+            case HandleKind.Channel:
+                NativeMethods.pyxel_channel_drop((void*)handle);
+                break;
+            case HandleKind.Tone:
+                NativeMethods.pyxel_tone_drop((void*)handle);
+                break;
         }
     }
 
@@ -208,6 +268,8 @@ public static unsafe partial class Pyxel
         value is null ? null : Encoding.UTF8.GetBytes(value + "\0");
 
     internal static byte[] ToUtf8Required(string value) => Encoding.UTF8.GetBytes(value + "\0");
+
+    internal static byte[]? ToUtf8Optional(string? value) => ToUtf8(value);
 
     internal static void Check(int result)
     {

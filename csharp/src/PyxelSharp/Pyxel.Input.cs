@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using PyxelSharp.Native;
 
 namespace PyxelSharp;
@@ -77,4 +78,95 @@ public static unsafe partial class Pyxel
 
     /// <summary>Moves the mouse cursor (Python: <c>pyxel.warp_mouse</c>).</summary>
     public static void WarpMouse(float x, float y) => Check(NativeMethods.pyxel_warp_mouse(x, y));
+
+    /// <summary>Text typed since the last frame (Python: <c>pyxel.input_text</c>).</summary>
+    public static string InputText
+    {
+        get
+        {
+            byte* text;
+            Check(NativeMethods.pyxel_input_text(&text));
+            return Marshal.PtrToStringUTF8((IntPtr)text) ?? string.Empty;
+        }
+    }
+
+    /// <summary>Keys currently held down (Python: <c>pyxel.input_keys</c>). Copies on get.</summary>
+    public static Key[] InputKeys
+    {
+        get
+        {
+            uint length;
+            Check(NativeMethods.pyxel_input_keys_len(&length));
+            var keys = new Key[length];
+            fixed (Key* buffer = keys)
+            {
+                Check(NativeMethods.pyxel_input_keys_read((uint*)buffer, length));
+            }
+            return keys;
+        }
+    }
+
+    /// <summary>Files dropped onto the window this frame (Python: <c>pyxel.dropped_files</c>). Copies on get.</summary>
+    public static string[] DroppedFiles
+    {
+        get
+        {
+            uint length;
+            Check(NativeMethods.pyxel_dropped_files_len(&length));
+            var files = new string[length];
+            for (var i = 0u; i < length; i++)
+            {
+                byte* path;
+                Check(NativeMethods.pyxel_dropped_file(i, &path));
+                files[i] = Marshal.PtrToStringUTF8((IntPtr)path) ?? string.Empty;
+            }
+            return files;
+        }
+    }
+
+    /// <summary>Overrides a key state for the current frame (Python: <c>pyxel.set_btn</c>, mainly for tests).</summary>
+    public static void SetBtn(Key key, bool state) =>
+        Check(NativeMethods.pyxel_set_btn((uint)key, state));
+
+    /// <summary>Overrides an analog key value for the current frame (Python: <c>pyxel.set_btnv</c>).</summary>
+    public static void SetBtnv(Key key, int value) =>
+        Check(NativeMethods.pyxel_set_btnv((uint)key, value));
+
+    /// <summary>Overrides the mouse position (Python: <c>pyxel.set_mouse_pos</c>).</summary>
+    public static void SetMousePos(float x, float y) =>
+        Check(NativeMethods.pyxel_warp_mouse(x, y));
+
+    /// <summary>Overrides the typed text for the current frame (Python: <c>pyxel.set_input_text</c>).</summary>
+    public static void SetInputText(string text)
+    {
+        fixed (byte* textPtr = ToUtf8Required(text))
+        {
+            Check(NativeMethods.pyxel_set_input_text(textPtr));
+        }
+    }
+
+    /// <summary>Overrides the dropped-file list for the current frame (Python: <c>pyxel.set_dropped_files</c>).</summary>
+    public static void SetDroppedFiles(string[] files)
+    {
+        var pointers = new IntPtr[files.Length];
+        try
+        {
+            for (var i = 0; i < files.Length; i++)
+            {
+                pointers[i] = Marshal.StringToCoTaskMemUTF8(files[i]);
+            }
+            fixed (IntPtr* pointersPtr = pointers)
+            {
+                Check(NativeMethods.pyxel_set_dropped_files(
+                    (byte**)pointersPtr, (uint)files.Length));
+            }
+        }
+        finally
+        {
+            foreach (var pointer in pointers)
+            {
+                Marshal.FreeCoTaskMem(pointer);
+            }
+        }
+    }
 }

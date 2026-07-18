@@ -32,13 +32,27 @@ macro_rules! ffi {
     };
 }
 
+/// Locks an audio object (`Arc<Mutex<_>>`), recovering from poisoning; the
+/// audio thread cannot leave these in a torn state.
+macro_rules! audio_lock {
+    ($rc:expr) => {
+        ($rc).lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    };
+}
+
+mod audio;
+mod channel;
 mod font;
 mod graphics;
 mod image;
 mod input;
+mod math;
+mod music;
 mod resource;
+mod sound;
 mod system;
 mod tilemap;
+mod tone;
 
 use std::cell::RefCell;
 use std::ffi::{c_char, CStr, CString};
@@ -87,6 +101,20 @@ pub(crate) fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
 
 thread_local! {
     static LAST_ERROR: RefCell<CString> = RefCell::new(CString::default());
+
+    // Backing storage for string results (pyxel_user_data_dir etc.); a
+    // returned pointer stays valid until the next string-returning call on
+    // the same thread.
+    static STRING_RESULT: RefCell<CString> = RefCell::new(CString::default());
+}
+
+/// Stores `value` in the thread-local string slot and returns its pointer.
+pub(crate) fn set_string_result(value: String) -> *const c_char {
+    let c_value = CString::new(value).unwrap_or_default();
+    STRING_RESULT.with(|slot| {
+        *slot.borrow_mut() = c_value;
+        slot.borrow().as_ptr()
+    })
 }
 
 pub(crate) fn set_last_error(message: &str) {

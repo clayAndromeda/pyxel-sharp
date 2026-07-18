@@ -348,3 +348,42 @@ pub extern "C" fn pyxel_pal_reset() -> i32 {
         Ok(())
     })
 }
+
+/// Number of display palette entries (Python: `len(pyxel.colors)`).
+///
+/// # Safety
+/// `out_len` must point to writable memory.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_colors_len(out_len: *mut u32) -> i32 {
+    ffi!({
+        *out_len = pyxel::colors().len() as u32;
+        Ok(())
+    })
+}
+
+/// Reads display palette entry `index` as 0xRRGGBB
+/// (Python: `pyxel.colors[i]`).
+///
+/// # Safety
+/// `out_rgb` must point to writable memory.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_colors_get(index: u32, out_rgb: *mut u32) -> i32 {
+    ffi!({
+        *out_rgb = *pyxel::colors()
+            .get(index as usize)
+            .ok_or_else(|| format!("color index out of range: {index}"))?;
+        Ok(())
+    })
+}
+
+/// Writes display palette entry `index` as 0xRRGGBB
+/// (Python: `pyxel.colors[i] = rgb`).
+#[no_mangle]
+pub extern "C" fn pyxel_colors_set(index: u32, rgb: u32) -> i32 {
+    ffi!({
+        *pyxel::colors()
+            .get_mut(index as usize)
+            .ok_or_else(|| format!("color index out of range: {index}"))? = rgb;
+        Ok(())
+    })
+}

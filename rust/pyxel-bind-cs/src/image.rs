@@ -85,6 +85,32 @@ pub unsafe extern "C" fn pyxel_screen(out_handle: *mut *mut c_void) -> i32 {
     })
 }
 
+/// Returns a handle to the mouse cursor image `pyxel.cursor`.
+///
+/// # Safety
+/// `out_handle` must point to writable memory.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_cursor_image(out_handle: *mut *mut c_void) -> i32 {
+    ffi!({
+        let image = pyxel::cursor_image().clone();
+        *out_handle = image_into_handle(image);
+        Ok(())
+    })
+}
+
+/// Returns a handle to the built-in font image `pyxel.font`.
+///
+/// # Safety
+/// `out_handle` must point to writable memory.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_font_image(out_handle: *mut *mut c_void) -> i32 {
+    ffi!({
+        let image = pyxel::font_image().clone();
+        *out_handle = image_into_handle(image);
+        Ok(())
+    })
+}
+
 /// Number of image banks (`pyxel::NUM_IMAGES`).
 ///
 /// # Safety
