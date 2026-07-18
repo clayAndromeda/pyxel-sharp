@@ -2,7 +2,21 @@ use std::ffi::c_char;
 
 use pyxel::{Pyxel, PyxelCallback};
 
-use crate::{opt_bool, opt_str, opt_u32, NONE_U32};
+use crate::{opt_bool, opt_str, opt_u32, set_string_result, NONE_U32};
+
+/// The linked pyxel-core version (Python: `pyxel.VERSION`). The pointer
+/// written to `out_version` stays valid until the next string-returning call
+/// on this thread.
+///
+/// # Safety
+/// `out_version` must point to writable memory.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_version(out_version: *mut *const c_char) -> i32 {
+    ffi!({
+        *out_version = set_string_result(pyxel::VERSION.to_string());
+        Ok(())
+    })
+}
 
 /// # Safety
 /// `title` must be null or a valid NUL-terminated UTF-8 string.

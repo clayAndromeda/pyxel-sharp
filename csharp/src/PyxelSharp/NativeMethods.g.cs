@@ -26,6 +26,17 @@ namespace PyxelSharp.Native
         internal static extern byte* pyxel_last_error();
 
         /// <summary>
+        ///  The linked pyxel-core version (Python: `pyxel.VERSION`). The pointer
+        ///  written to `out_version` stays valid until the next string-returning call
+        ///  on this thread.
+        ///
+        ///  # Safety
+        ///  `out_version` must point to writable memory.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_version", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_version(byte** out_version);
+
+        /// <summary>
         ///  # Safety
         ///  `title` must be null or a valid NUL-terminated UTF-8 string.
         /// </summary>

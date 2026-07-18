@@ -53,6 +53,10 @@
   + HeadlessSmoke に math/audio/input/colors 系 27 項目追加 (全パス)
 - 未対応 (意図的スキップ): `gen_bgm`、deprecated API 群 (old_mml、
   `Tone.noise`/`waveform`、`channel(n)`/`sound(n)`/`music(n)` 等)
+- [x] パリティ監査 (__init__.pyi 全 API 突き合わせ) + 定数類の追加 (2026-07-18):
+  `Version` (FFI 取得)、サイズ系/バンク数 (`TileSize`/`ImageSize`/`FontWidth` 等は
+  C# const、HeadlessSmoke でランタイム値と照合)、`ToneTriangle` 等/`EffectSlide` 等
+  (const byte)、`DefaultColors`。Python ランチャ固有定数と CLI/Editor は対象外
 - [ ] Python サンプル (pyxel/python/pyxel/examples 01〜) の移植で網羅検証
 
 ## インフラ / 配布

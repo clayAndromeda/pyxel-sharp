@@ -229,6 +229,20 @@ Pyxel.Colors[15] = savedColor;
 Pyxel.Resize(80, 60);
 Check(Pyxel.Width == 80 && Pyxel.Height == 60, $"resize -> {Pyxel.Width}x{Pyxel.Height}");
 
+// Constants: hardcoded values must agree with the linked pyxel-core
+
+Check(Pyxel.Version.Length > 0, $"version = {Pyxel.Version}");
+Check(Pyxel.NumColors == Pyxel.Colors.Count, "NumColors matches runtime");
+Check(Pyxel.NumImages == Pyxel.Images.Count, "NumImages matches runtime");
+Check(Pyxel.NumTilemaps == Pyxel.Tilemaps.Count, "NumTilemaps matches runtime");
+Check(Pyxel.NumChannels == Pyxel.Channels.Count, "NumChannels matches runtime");
+Check(Pyxel.NumTones == Pyxel.Tones.Count, "NumTones matches runtime");
+Check(Pyxel.NumSounds == Pyxel.Sounds.Count, "NumSounds matches runtime");
+Check(Pyxel.NumMusics == Pyxel.Musics.Count, "NumMusics matches runtime");
+Check(Pyxel.DefaultColors.Length == Pyxel.NumColors, "DefaultColors length");
+Check(Pyxel.Images[0].Width == Pyxel.ImageSize, "ImageSize matches bank width");
+Check(Pyxel.Tilemaps[0].Width == Pyxel.TilemapSize, "TilemapSize matches bank width");
+
 Console.WriteLine("HeadlessSmoke: all checks passed");
 return 0;
 
