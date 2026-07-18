@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>PyxelSharp.Editor</RootNamespace>
+    <AssemblyName>pyxel-edit</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PyxelSharp\PyxelSharp.csproj" />
+    <!-- The editor sprite sheet comes from the upstream submodule unmodified -->
+    <Content Include="..\..\..\pyxel\python\pyxel\editor\assets\editor_220x160.png"
+             Link="assets\editor_220x160.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

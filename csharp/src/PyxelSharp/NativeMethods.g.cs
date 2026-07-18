@@ -444,6 +444,16 @@ namespace PyxelSharp.Native
         internal static extern int pyxel_colors_set(uint index, uint rgb);
 
         /// <summary>
+        ///  Replaces the entire display palette, resizing it to `len` entries
+        ///  (Python: `pyxel.colors[:] = list`).
+        ///
+        ///  # Safety
+        ///  `rgbs` must point to `len` readable `u32` values.
+        /// </summary>
+        [DllImport(__DllName, EntryPoint = "pyxel_colors_replace", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+        internal static extern int pyxel_colors_replace(uint* rgbs, uint len);
+
+        /// <summary>
         ///  # Safety
         ///  `out_handle` must point to writable memory.
         /// </summary>

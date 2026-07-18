@@ -331,4 +331,24 @@ public sealed unsafe class ColorPalette
         }
         set => Pyxel.Check(NativeMethods.pyxel_colors_set((uint)index, value));
     }
+
+    /// <summary>Replaces the entire palette, resizing it (Python: <c>pyxel.colors[:] = list</c>).</summary>
+    public void Replace(ReadOnlySpan<uint> rgbs)
+    {
+        fixed (uint* ptr = rgbs)
+        {
+            Pyxel.Check(NativeMethods.pyxel_colors_replace(ptr, (uint)rgbs.Length));
+        }
+    }
+
+    /// <summary>Copies the palette to an array (Python: <c>list(pyxel.colors)</c>).</summary>
+    public uint[] ToArray()
+    {
+        var values = new uint[Count];
+        for (var i = 0; i < values.Length; i++)
+        {
+            values[i] = this[i];
+        }
+        return values;
+    }
 }

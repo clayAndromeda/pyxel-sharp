@@ -1,11 +1,13 @@
 <Solution>
   <Folder Name="/samples/">
     <Project Path="samples/BouncingBall/BouncingBall.csproj" />
+    <Project Path="samples/EditorSmoke/EditorSmoke.csproj" />
     <Project Path="samples/HeadlessSmoke/HeadlessSmoke.csproj" />
     <Project Path="samples/HelloPyxel/HelloPyxel.csproj" />
     <Project Path="samples/JumpGame/JumpGame.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PyxelSharp/PyxelSharp.csproj" />
+    <Project Path="src/PyxelSharp.Editor/PyxelSharp.Editor.csproj" />
   </Folder>
 </Solution>

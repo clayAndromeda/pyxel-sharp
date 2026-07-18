@@ -97,8 +97,13 @@ wasm レガシー (→ DroppedFiles で代替)。
 - **検証**: (a) headless 操作テスト (SetBtn/SetMousePos で入力注入 → Pget/状態検証)、
   (b) .pyxres ラウンドトリップ (Python 版エディタと相互運用確認)、(c) スライスごとの目視比較
 
-- [ ] スライス 1: widgets 基盤 (12ファイル) + App シェル + ImageEditor
-  (canvas_panel / image_viewer / field_cursor の image 系)
+- [x] スライス 1: widgets 基盤 (12ファイル) + App シェル + ImageEditor
+  (canvas_panel / image_viewer。field_cursor は sound/music 用のためスライス 3 へ)
+  (2026-07-18)。FFI に pyxel_colors_replace を追加 (パレット伸長は colors_set では
+  不可能だった唯一の欠落)。未移植タブは PlaceholderEditor 表示。
+  検証: EditorSmoke (headless 19 項目: パレット合成/鉛筆/undo/redo/カラーピッカー/
+  ショートカット/Ctrl+S 保存/タブ切替、全パス) + ウィンドウ起動確認。目視比較は未
+- [ ] スライス 1 残: Python 版エディタとの目視比較 (ユーザー確認待ち)
 - [ ] スライス 2: TilemapEditor (canvas_panel 再利用 + tilemap_viewer)
 - [ ] スライス 3: SoundEditor (field_cursor + piano_keyboard / piano_roll / octave_bar /
   sound_field / sound_selector)

@@ -387,3 +387,19 @@ pub extern "C" fn pyxel_colors_set(index: u32, rgb: u32) -> i32 {
         Ok(())
     })
 }
+
+/// Replaces the entire display palette, resizing it to `len` entries
+/// (Python: `pyxel.colors[:] = list`).
+///
+/// # Safety
+/// `rgbs` must point to `len` readable `u32` values.
+#[no_mangle]
+pub unsafe extern "C" fn pyxel_colors_replace(rgbs: *const u32, len: u32) -> i32 {
+    ffi!({
+        let values = std::slice::from_raw_parts(rgbs, len as usize);
+        let mut colors = pyxel::colors();
+        colors.clear();
+        colors.extend_from_slice(values);
+        Ok(())
+    })
+}
