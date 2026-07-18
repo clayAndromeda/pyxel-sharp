@@ -79,10 +79,31 @@ Rust/LLVM/CMake なしにゲームが書ける状態。win-x64 のみ。バー�
 - 後回し (合意済み): CI (GitHub Actions) は NuGet.org 公開検討時に整備。
   `package`/`app2exe` 相当は `dotnet publish` 手順を README に書くことで代替
 
-## Stage 5: リソースエディタ C# 移植 (Stage 4 の後)
+## Stage 5: リソースエディタ C# 移植 (2026-07-18 設計レビューで合意)
 
-- [ ] pyxel/python/pyxel/editor (約20ファイル) を PyxelSharp 上に移植。
-  PyxelSharp 自身のドッグフーディングを兼ねる。詳細設計は着手時に別途レビュー
+対象: pyxel/python/pyxel/editor (4,161 行 / 31 ファイル、アセットは editor_220x160.png 1枚)。
+構造分析の結論: エンジン API の欠落はゼロ。user_pal/num_user_colors/rect2/get_slice 等は
+エディタ自身のモンキーパッチ (→ C# では拡張メソッド + エディタ内状態)、_dropped_files は
+wasm レガシー (→ DroppedFiles で代替)。
+
+方針 (合意済み):
+- **忠実度**: ファイル構成・クラス分割・レイアウト定数は本家と 1:1 対応を維持
+  (本家追従を容易に)。機構だけ C# 化: 動的 var → WidgetVar<T> + 変更通知、
+  文字列イベント → C# event、モンキーパッチ → 拡張メソッド。
+  配列プロパティ (sound.notes 等) の in-place 変更は read-modify-write に書き換え
+- **配置**: csharp/src/PyxelSharp.Editor (exe、ProjectReference)。まずリポ内 exe で
+  開発・検証し、完成後に dotnet tool 化 (`pyxel-edit <file>.pyxres`) して Pack.ps1 に組込
+- **進め方**: 縦切り 4 スライス。各スライスで動作確認してから次へ
+- **検証**: (a) headless 操作テスト (SetBtn/SetMousePos で入力注入 → Pget/状態検証)、
+  (b) .pyxres ラウンドトリップ (Python 版エディタと相互運用確認)、(c) スライスごとの目視比較
+
+- [ ] スライス 1: widgets 基盤 (12ファイル) + App シェル + ImageEditor
+  (canvas_panel / image_viewer / field_cursor の image 系)
+- [ ] スライス 2: TilemapEditor (canvas_panel 再利用 + tilemap_viewer)
+- [ ] スライス 3: SoundEditor (field_cursor + piano_keyboard / piano_roll / octave_bar /
+  sound_field / sound_selector)
+- [ ] スライス 4: MusicEditor (music_field) + 総仕上げ
+- [ ] dotnet tool 化 + Pack.ps1 組込 + README 更新
 - それまでの .pyxres 編集は Python 版 pyxel のエディタを併用 (フォーマット共通)
 
 ## その他 (時期未定)
