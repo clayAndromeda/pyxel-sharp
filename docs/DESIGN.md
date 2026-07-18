@@ -121,10 +121,11 @@ pyxel-core の build.rs がソースからビルド・静的リンクするた�
 
 | Stage | 内容 | 状態 |
 |---|---|---|
-| 1 | MVP: system (init/run/quit/flip/show/title/fullscreen) + graphics (cls/pset/pget/line/rect/rectb/circ/circb/elli/ellib/tri/trib/text/clip/camera/dither/pal) + input (btn/btnp/btnr/btnv/mouse) + BouncingBall サンプル | 本設計の実装範囲 |
+| 1 | MVP: system (init/run/quit/flip/show/title/fullscreen) + graphics (cls/pset/pget/line/rect/rectb/circ/circb/elli/ellib/tri/trib/text/clip/camera/dither/pal) + input (btn/btnp/btnr/btnv/mouse) + BouncingBall サンプル | 完了 (2026-07-18) |
 | 2 | Image/Tilemap/Font のオペークハンドル、リソースファイル (load/save)、blt/bltm | 未着手 |
 | 3 | audio (Sound/Music/Channel/Tone、play/playm)、math モジュール → Python 版フルパリティ | 未着手 |
-| 4 | 書き味の改善: ECS (Friflo.Engine.ECS) ベースの推奨アーキテクチャ層 `PyxelSharp.Ecs` | 未着手 |
+
+具体的な作業項目は [TODO.md](TODO.md) で管理する。
 
 ## 4. 本家に追従する際の注意
 
