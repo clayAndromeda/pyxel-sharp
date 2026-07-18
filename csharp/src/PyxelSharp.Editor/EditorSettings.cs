@@ -60,4 +60,12 @@ public static class EditorMath
         }
         return q;
     }
+
+    /// <summary>Python-style modulo (<c>%</c>), which is never negative for a
+    /// positive divisor.</summary>
+    public static int Mod(int a, int b)
+    {
+        var r = a % b;
+        return r < 0 ? r + b : r;
+    }
 }

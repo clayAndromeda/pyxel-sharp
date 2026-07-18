@@ -22,6 +22,13 @@ public static unsafe partial class Pyxel
                 ToSentinel(excludeSounds),
                 ToSentinel(excludeMusics)));
         }
+
+        // load replaces the banks inside pyxel-core; cached bank wrappers
+        // would keep pointing at the old objects (like stale Python refs).
+        Images.Invalidate();
+        Tilemaps.Invalidate();
+        Sounds.Invalidate();
+        Musics.Invalidate();
     }
 
     /// <summary>Saves a .pyxres resource file (Python: <c>pyxel.save</c>).</summary>

@@ -2,16 +2,18 @@ using PyxelSharp.Editor.Widgets;
 
 namespace PyxelSharp.Editor;
 
-// canvas_panel.py (image mode; tilemap mode arrives in slice 2)
-public sealed class CanvasPanel : Widget
+// canvas_panel.py
+//
+// Generic over the cell value (Color for ImageEditor, Tile for TilemapEditor);
+// mode-specific behavior goes through ICanvasPanelHost<TValue>.
+internal sealed class CanvasPanel<TValue> : Widget
 {
-    private readonly ICanvasHost _host;
+    private readonly ICanvasPanelHost<TValue> _host;
     private readonly WidgetVar<string> _helpMessageVar;
-    private readonly Image _editCanvas = new(16, 16);
+    private readonly ICanvas<TValue> _editCanvas;
     private readonly ScrollBar _hScrollBar;
     private readonly ScrollBar _vScrollBar;
 
-    private ImageEditHistory? _historyData;
     private int _pressX;
     private int _pressY;
     private int _lastX;
@@ -22,16 +24,16 @@ public sealed class CanvasPanel : Widget
     private int _selectY1;
     private int _selectX2;
     private int _selectY2;
-    private Color[,]? _canvasBuffer;
-    private Color[,]? _bankBuffer;
+    private TValue[,]? _canvasBuffer;
     private bool _isDragged;
     private bool _isAssistMode;
 
     public CanvasPanel(EditorBase parent)
         : base(parent, 11, 16, 130, 130)
     {
-        _host = (ICanvasHost)parent;
+        _host = (ICanvasPanelHost<TValue>)parent;
         _helpMessageVar = parent.HelpMessageVar;
+        _editCanvas = _host.CreateEditCanvas();
 
         _hScrollBar = new ScrollBar(this, 0, 129, scrollAmount: 32, sliderAmount: 2,
             value: 0, width: 130);
@@ -53,11 +55,10 @@ public sealed class CanvasPanel : Widget
 
     // Helpers
 
-    private Image Canvas => _host.CanvasVar.Get();
+    private ICanvas<TValue> Canvas => _host.Canvas;
     private int FocusX => _host.FocusXVar.Get();
     private int FocusY => _host.FocusYVar.Get();
     private int Tool => _host.ToolVar.Get();
-    private int DrawColor => _host.ColorVar.Get();
 
     private (int X, int Y) ScreenToFocus(int x, int y)
     {
@@ -75,58 +76,25 @@ public sealed class CanvasPanel : Widget
         return (x, y, w, h);
     }
 
-    private void AddPreHistory(bool bankCopy = false)
+    private void ResetEditCanvas()
     {
-        var data = new ImageEditHistory { ImageIndex = _host.ImageIndexVar.Get() };
-        _historyData = data;
-
-        if (bankCopy)
-        {
-            data.OldData = Canvas.GetSlice(0, 0, 256, 256);
-        }
-        else
-        {
-            data.FocusPos = (FocusX, FocusY);
-            data.OldCanvas = Canvas.GetSlice(FocusX * 8, FocusY * 8, 16, 16);
-        }
-    }
-
-    private void AddPostHistory(bool bankCopy = false)
-    {
-        var data = _historyData!;
-
-        if (bankCopy)
-        {
-            data.NewData = Canvas.GetSlice(0, 0, 256, 256);
-            if (!ImageExtensions.SliceEquals(data.NewData, data.OldData!))
-            {
-                _host.AddHistory(data);
-            }
-        }
-        else
-        {
-            data.NewCanvas = Canvas.GetSlice(FocusX * 8, FocusY * 8, 16, 16);
-            if (!ImageExtensions.SliceEquals(data.NewCanvas, data.OldCanvas!))
-            {
-                _host.AddHistory(data);
-            }
-        }
-    }
-
-    private void ResetEditCanvas() =>
         _editCanvas.Blt(0, 0, Canvas, FocusX * 8, FocusY * 8, 16, 16);
+        _editCanvas.CopySourceFrom(Canvas);
+    }
+
+    private void FinishEditCanvas() => _host.FinishEditCanvas(_editCanvas, _pressX, _pressY);
 
     // Event handlers
 
     private void OnMouseDown(Key key, int x, int y)
     {
-        // Right click picks the current color.
+        // Right click picks the current color or tile.
         if (key == Key.MouseButtonRight)
         {
             var (fx, fy) = ScreenToFocus(x, y);
             fx += FocusX * 8;
             fy += FocusY * 8;
-            _host.ColorVar.Set(Canvas.Pget(fx, fy));
+            _host.PickValue(Canvas.Pget(fx, fy));
             return;
         }
         if (key != Key.MouseButtonLeft)
@@ -152,17 +120,19 @@ public sealed class CanvasPanel : Widget
         else if (Tool is >= EditorSettings.ToolPencil and <= EditorSettings.ToolCirc)
         {
             ResetEditCanvas();
-            _editCanvas.Pset(x, y, DrawColor);
+            _editCanvas.Pset(x, y, _host.DrawValue);
+            FinishEditCanvas();
         }
 
         // BUCKET: flood fill and commit immediately
         else if (Tool == EditorSettings.ToolBucket)
         {
-            AddPreHistory();
+            _host.AddPreHistory();
             ResetEditCanvas();
-            _editCanvas.Fill(x, y, DrawColor);
+            _editCanvas.Fill(x, y, _host.DrawValue);
+            FinishEditCanvas();
             Canvas.Blt(FocusX * 8, FocusY * 8, _editCanvas, 0, 0, 16, 16);
-            AddPostHistory();
+            _host.AddPostHistory();
         }
     }
 
@@ -176,9 +146,9 @@ public sealed class CanvasPanel : Widget
         _isDragged = false;
         if (Tool is >= EditorSettings.ToolPencil and <= EditorSettings.ToolCirc)
         {
-            AddPreHistory();
+            _host.AddPreHistory();
             Canvas.Blt(FocusX * 8, FocusY * 8, _editCanvas, 0, 0, 16, 16);
-            AddPostHistory();
+            _host.AddPostHistory();
         }
     }
 
@@ -222,11 +192,13 @@ public sealed class CanvasPanel : Widget
                 if (_isAssistMode)
                 {
                     ResetEditCanvas();
-                    _editCanvas.Line(x1, y1, x2, y2, DrawColor);
+                    _editCanvas.Line(x1, y1, x2, y2, _host.DrawValue);
+                    FinishEditCanvas();
                 }
                 else
                 {
-                    _editCanvas.Line(_lastX, _lastY, x2, y2, DrawColor);
+                    _editCanvas.Line(_lastX, _lastY, x2, y2, _host.DrawValue);
+                    FinishEditCanvas();
                 }
             }
 
@@ -234,28 +206,32 @@ public sealed class CanvasPanel : Widget
             else if (Tool == EditorSettings.ToolRectb)
             {
                 ResetEditCanvas();
-                _editCanvas.Rectb2(x1, y1, x2, y2, DrawColor);
+                _editCanvas.Rectb2(x1, y1, x2, y2, _host.DrawValue);
+                FinishEditCanvas();
             }
 
             // RECT: filled rectangle
             else if (Tool == EditorSettings.ToolRect)
             {
                 ResetEditCanvas();
-                _editCanvas.Rect2(x1, y1, x2, y2, DrawColor);
+                _editCanvas.Rect2(x1, y1, x2, y2, _host.DrawValue);
+                FinishEditCanvas();
             }
 
             // CIRCB: outlined ellipse
             else if (Tool == EditorSettings.ToolCircb)
             {
                 ResetEditCanvas();
-                _editCanvas.Ellib2(x1, y1, x2, y2, DrawColor);
+                _editCanvas.Ellib2(x1, y1, x2, y2, _host.DrawValue);
+                FinishEditCanvas();
             }
 
             // CIRC: filled ellipse
             else if (Tool == EditorSettings.ToolCirc)
             {
                 ResetEditCanvas();
-                _editCanvas.Elli2(x1, y1, x2, y2, DrawColor);
+                _editCanvas.Elli2(x1, y1, x2, y2, _host.DrawValue);
+                FinishEditCanvas();
             }
 
             _lastX = x2;
@@ -308,23 +284,19 @@ public sealed class CanvasPanel : Widget
             // Ctrl+Shift+C/Ctrl+Shift+X: Copy bank
             if (Pyxel.Btnp(Key.C) || Pyxel.Btnp(Key.X))
             {
-                _bankBuffer = Pyxel.Images[_host.ImageIndexVar.Get()].GetSlice(0, 0, 256, 256);
+                _host.BankClipboardCopy();
             }
 
             // Ctrl+Shift+X: Cut bank
             if (Pyxel.Btnp(Key.X))
             {
-                AddPreHistory(bankCopy: true);
-                Pyxel.Images[_host.ImageIndexVar.Get()].Rect(0, 0, 256, 256, 0);
-                AddPostHistory(bankCopy: true);
+                _host.BankClipboardCut();
             }
 
             // Ctrl+Shift+V: Paste bank
-            if (Pyxel.Btnp(Key.V) && _bankBuffer is not null)
+            if (Pyxel.Btnp(Key.V))
             {
-                AddPreHistory(bankCopy: true);
-                Pyxel.Images[_host.ImageIndexVar.Get()].SetSlice(0, 0, _bankBuffer);
-                AddPostHistory(bankCopy: true);
+                _host.BankClipboardPaste();
             }
         }
 
@@ -350,20 +322,20 @@ public sealed class CanvasPanel : Widget
             {
                 var (x, y, w, h) = SelectionRect();
                 _canvasBuffer = Canvas.GetSlice(x, y, w, h);
-                AddPreHistory();
-                Canvas.Rect(x, y, w, h, 0);
-                AddPostHistory();
+                _host.AddPreHistory();
+                Canvas.Rect(x, y, w, h, _host.EraseValue);
+                _host.AddPostHistory();
             }
 
             // Ctrl+V: Paste
             if (_canvasBuffer is not null && Pyxel.Btnp(Key.V))
             {
-                AddPreHistory();
+                _host.AddPreHistory();
                 var width = _canvasBuffer.GetLength(1);
                 var height = _canvasBuffer.GetLength(0);
                 width -= Math.Max(_selectX1 + width - 16, 0);
                 height -= Math.Max(_selectY1 + height - 16, 0);
-                var clipped = new Color[height, width];
+                var clipped = new TValue[height, width];
                 for (var yi = 0; yi < height; yi++)
                 {
                     for (var xi = 0; xi < width; xi++)
@@ -372,7 +344,7 @@ public sealed class CanvasPanel : Widget
                     }
                 }
                 Canvas.SetSlice(FocusX * 8 + _selectX1, FocusY * 8 + _selectY1, clipped);
-                AddPostHistory();
+                _host.AddPostHistory();
             }
         }
 
@@ -383,20 +355,23 @@ public sealed class CanvasPanel : Widget
             if (Pyxel.Btnp(Key.H))
             {
                 var (x, y, w, h) = SelectionRect();
-                AddPreHistory();
+                _host.AddPreHistory();
                 Canvas.Blt(x, y, Canvas, x, y, -w, h);
-                AddPostHistory();
+                _host.AddPostHistory();
             }
 
             // V: Flip vertical
             if (Pyxel.Btnp(Key.V))
             {
                 var (x, y, w, h) = SelectionRect();
-                AddPreHistory();
+                _host.AddPreHistory();
                 Canvas.Blt(x, y, Canvas, x, y, w, -h);
-                AddPostHistory();
+                _host.AddPostHistory();
             }
         }
+
+        // Move tile focus (tilemap mode: Shift+arrows)
+        _host.UpdateTileFocus();
 
         // Move target focus (only when no modifiers held)
         if (!EditorSettings.IsModifierPressed())
@@ -430,10 +405,7 @@ public sealed class CanvasPanel : Widget
             : (Canvas, FocusX * 8, FocusY * 8);
 
         PyxelUser.UserPal();
-        // blt scales centered on (x + (w-1)/2, y + (h-1)/2); shift dest by
-        // (w * (scale - 1) + 1) / 2 = 56.5 so the 128x128 output aligns to
-        // (X + 1, Y + 1). Integer 57 rounds the center identically.
-        Pyxel.Blt(X + 57, Y + 57, canvas, offsetX, offsetY, 16, 16, scale: 8);
+        _host.DrawCanvas(X, Y, canvas, offsetX, offsetY);
         Pyxel.Pal();
 
         Pyxel.Line(X + 1, Y + 64, X + 128, Y + 64, WidgetSettings.PanelColor);

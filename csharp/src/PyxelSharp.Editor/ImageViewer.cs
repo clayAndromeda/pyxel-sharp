@@ -32,7 +32,7 @@ public sealed class ImageViewer : Widget
         _isTilemapMode = parent is ITilemapHost;
         var sliderAmount = _isTilemapMode ? 8 : 16;
 
-        _imageIndexVar = ((ICanvasHost)parent).ImageIndexVar;
+        _imageIndexVar = ((IImageViewerHost)parent).ImageIndexVar;
         _helpMessageVar = parent.HelpMessageVar;
 
         FocusXVar = new WidgetVar<int>(0);

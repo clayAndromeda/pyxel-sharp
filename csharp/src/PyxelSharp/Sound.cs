@@ -15,7 +15,7 @@ namespace PyxelSharp;
 public sealed unsafe class Sound : IDisposable
 {
     private void* _handle;
-    private readonly bool _isAppLifetime;
+    private bool _isAppLifetime;
 
     internal Sound(void* handle, bool isAppLifetime = false)
     {
@@ -253,6 +253,19 @@ public sealed unsafe class Sound : IDisposable
             Pyxel.ReleaseHandle((IntPtr)_handle, Pyxel.HandleKind.Sound);
         }
     }
+
+    // Called when the bank cache is invalidated (pyxel.load replaced the
+    // banks): the wrapper keeps working against the old object like a stale
+    // Python reference, but is now released by GC when unreferenced.
+    internal void Detach()
+    {
+        if (!_isAppLifetime)
+        {
+            return;
+        }
+        _isAppLifetime = false;
+        GC.ReRegisterForFinalize(this);
+    }
 }
 
 /// <summary>The sound banks, <c>Pyxel.Sounds[0..63]</c> (Python: <c>pyxel.sounds</c>).</summary>
@@ -289,5 +302,20 @@ public sealed unsafe class SoundBankList
             }
             return bank;
         }
+    }
+
+    // Drops cached wrappers so the next access re-fetches the banks; needed
+    // after pyxel.load replaces them (cached handles would go stale).
+    internal void Invalidate()
+    {
+        if (_banks is null)
+        {
+            return;
+        }
+        foreach (var bank in _banks)
+        {
+            bank?.Detach();
+        }
+        _banks = null;
     }
 }

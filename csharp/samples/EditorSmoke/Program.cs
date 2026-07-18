@@ -99,6 +99,53 @@ Frame();
 Check(app.EditorTypeVar.Get() == 1, $"alt+right -> editor {app.EditorTypeVar.Get()}");
 Check(!imageEditor.IsVisible && app.Editors[1].IsVisible, "editor visibility switched");
 
+// --- Slice 2: tilemap editor ---
+var tilemapEditor = (TilemapEditor)app.Editors[1];
+Check(tilemapEditor.ImageIndexVar.Get() == 0, "tilemap imgsrc picker starts at 0");
+
+// Pick tile (2,1) in the image viewer (tilemap mode: viewer at 157,80)
+Pyxel.SetMousePos(178, 93);
+Pyxel.SetBtn(Key.MouseButtonLeft, true);
+Frame();
+Pyxel.SetBtn(Key.MouseButtonLeft, false);
+Frame();
+Check(tilemapEditor.TileXVar.Get() == 2 && tilemapEditor.TileYVar.Get() == 1,
+    $"tile pick -> ({tilemapEditor.TileXVar.Get()},{tilemapEditor.TileYVar.Get()})");
+
+// Pencil: stamp the tile onto tilemap cell (0,0)
+Check(Pyxel.Tilemaps[0].Pget(0, 0) == new Tile(0, 0), "tilemap cell initially (0,0)");
+Pyxel.SetMousePos(16, 21);
+Pyxel.SetBtn(Key.MouseButtonLeft, true);
+Frame();
+Pyxel.SetBtn(Key.MouseButtonLeft, false);
+Frame();
+Check(Pyxel.Tilemaps[0].Pget(0, 0) == new Tile(2, 1),
+    $"tile stamped: {Pyxel.Tilemaps[0].Pget(0, 0)}");
+
+// Undo / redo
+Check(tilemapEditor.CanUndo, "tilemap undo available");
+tilemapEditor.Undo();
+Check(Pyxel.Tilemaps[0].Pget(0, 0) == new Tile(0, 0), "tilemap undo reverts");
+tilemapEditor.Redo();
+Check(Pyxel.Tilemaps[0].Pget(0, 0) == new Tile(2, 1), "tilemap redo reapplies");
+
+// Image source picker drives tilemap.imgsrc
+tilemapEditor.ImageIndexVar.Set(1);
+Check(Pyxel.Tilemaps[0].ImageSourceIndex == 1, "imgsrc picker -> tilemap.imgsrc");
+
+// Save/load roundtrip through the .pyxres file
+Pyxel.SetBtn(Key.Ctrl, true);
+Pyxel.SetBtn(Key.S, true);
+Frame();
+Pyxel.SetBtn(Key.S, false);
+Pyxel.SetBtn(Key.Ctrl, false);
+Frame();
+Pyxel.Tilemaps[0].Pset(5, 5, (9, 9));
+Pyxel.Load(resPath);
+Check(Pyxel.Tilemaps[0].Pget(0, 0) == new Tile(2, 1), "pyxres roundtrip keeps tile");
+Check(Pyxel.Tilemaps[0].Pget(5, 5) == new Tile(0, 0), "pyxres roundtrip resets later edit");
+Check(Pyxel.Tilemaps[0].ImageSourceIndex == 1, "pyxres roundtrip keeps imgsrc");
+
 File.Delete(resPath);
 
 if (failures > 0)

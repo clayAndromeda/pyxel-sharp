@@ -80,22 +80,61 @@ public static class ImageExtensions
         }
     }
 
-    public static bool SliceEquals(Color[,] a, Color[,] b)
+}
+
+public static class TilemapExtensions
+{
+    private static (int X1, int Y1, int X2, int Y2) NormalizeRect(int x1, int y1, int x2, int y2) =>
+        (Math.Min(x1, x2), Math.Min(y1, y2), Math.Max(x1, x2), Math.Max(y1, y2));
+
+    public static void Rect2(this Tilemap tilemap, int x1, int y1, int x2, int y2, Tile tile)
     {
-        if (a.GetLength(0) != b.GetLength(0) || a.GetLength(1) != b.GetLength(1))
+        (x1, y1, x2, y2) = NormalizeRect(x1, y1, x2, y2);
+        tilemap.Rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1, tile);
+    }
+
+    public static void Rectb2(this Tilemap tilemap, int x1, int y1, int x2, int y2, Tile tile)
+    {
+        (x1, y1, x2, y2) = NormalizeRect(x1, y1, x2, y2);
+        tilemap.Rectb(x1, y1, x2 - x1 + 1, y2 - y1 + 1, tile);
+    }
+
+    public static void Elli2(this Tilemap tilemap, int x1, int y1, int x2, int y2, Tile tile)
+    {
+        (x1, y1, x2, y2) = NormalizeRect(x1, y1, x2, y2);
+        tilemap.Elli(x1, y1, x2 - x1 + 1, y2 - y1 + 1, tile);
+    }
+
+    public static void Ellib2(this Tilemap tilemap, int x1, int y1, int x2, int y2, Tile tile)
+    {
+        (x1, y1, x2, y2) = NormalizeRect(x1, y1, x2, y2);
+        tilemap.Ellib(x1, y1, x2 - x1 + 1, y2 - y1 + 1, tile);
+    }
+
+    /// <summary>Reads a rectangular region as [height, width] tiles.</summary>
+    public static Tile[,] GetSlice(this Tilemap tilemap, int x, int y, int width, int height)
+    {
+        var data = new Tile[height, width];
+        for (var yi = 0; yi < height; yi++)
         {
-            return false;
-        }
-        for (var yi = 0; yi < a.GetLength(0); yi++)
-        {
-            for (var xi = 0; xi < a.GetLength(1); xi++)
+            for (var xi = 0; xi < width; xi++)
             {
-                if (a[yi, xi] != b[yi, xi])
-                {
-                    return false;
-                }
+                data[yi, xi] = tilemap.Pget(x + xi, y + yi);
             }
         }
-        return true;
+        return data;
+    }
+
+    public static void SetSlice(this Tilemap tilemap, int x, int y, Tile[,] data)
+    {
+        var height = data.GetLength(0);
+        var width = data.GetLength(1);
+        for (var yi = 0; yi < height; yi++)
+        {
+            for (var xi = 0; xi < width; xi++)
+            {
+                tilemap.Pset(x + xi, y + yi, data[yi, xi]);
+            }
+        }
     }
 }

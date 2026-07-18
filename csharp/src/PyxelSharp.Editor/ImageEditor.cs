@@ -16,27 +16,26 @@ internal sealed class ImageEditHistory
     public Color[,]? NewCanvas;
 }
 
-public sealed class ImageEditor : EditorBase, ICanvasHost
+public sealed class ImageEditor : EditorBase, ICanvasPanelHost<Color>, IImageViewerHost
 {
     private readonly ColorPicker _colorPicker;
     private readonly RadioButton _toolButton;
     private readonly NumberPicker _imagePicker;
     private readonly ImageViewer _imageViewer;
-    private readonly CanvasPanel _canvasPanel;
+    private readonly CanvasPanel<Color> _canvasPanel;
+
+    private ImageEditHistory? _historyData;
+    private Color[,]? _bankBuffer;
 
     public WidgetVar<int> ColorVar { get; }
     public WidgetVar<int> ToolVar { get; }
     public WidgetVar<int> ImageIndexVar { get; }
-    public WidgetVar<Image> CanvasVar { get; }
     public WidgetVar<int> FocusXVar { get; }
     public WidgetVar<int> FocusYVar { get; }
 
     public ImageEditor(App parent)
         : base(parent)
     {
-        CanvasVar = new WidgetVar<Image>(null!);
-        CanvasVar.AddGetFilter(_ => Pyxel.Images[ImageIndexVar!.Get()]);
-
         _colorPicker = new ColorPicker(this, 11, 156,
             Math.Min(7, PyxelUser.NumUserColors - 1), withShadow: false);
         _colorPicker.MouseHover += (_, _) => HelpMessage = "COLOR:1-8/SHIFT+1-8";
@@ -56,7 +55,7 @@ public sealed class ImageEditor : EditorBase, ICanvasHost
         FocusXVar = _imageViewer.FocusXVar;
         FocusYVar = _imageViewer.FocusYVar;
 
-        _canvasPanel = new CanvasPanel(this);
+        _canvasPanel = new CanvasPanel<Color>(this);
 
         // Set event listeners
         UndoPerformed += data => RestoreState((ImageEditHistory)data, old: true);
@@ -65,6 +64,94 @@ public sealed class ImageEditor : EditorBase, ICanvasHost
         Update += OnUpdate;
         Draw += OnDraw;
     }
+
+    // ICanvasPanelHost<Color> (canvas_panel.py image-mode specifics)
+
+    ICanvas<Color> ICanvasPanelHost<Color>.Canvas => Canvas;
+    private ImageCanvas Canvas => new(Pyxel.Images[ImageIndexVar.Get()]);
+
+    ICanvas<Color> ICanvasPanelHost<Color>.CreateEditCanvas() => new ImageCanvas(new Image(16, 16));
+
+    Color ICanvasPanelHost<Color>.DrawValue => (byte)ColorVar.Get();
+
+    Color ICanvasPanelHost<Color>.EraseValue => 0;
+
+    void ICanvasPanelHost<Color>.PickValue(Color value) => ColorVar.Set(value.Value);
+
+    void ICanvasPanelHost<Color>.FinishEditCanvas(ICanvas<Color> editCanvas, int pressX, int pressY)
+    {
+    }
+
+    public void AddPreHistory(bool bankCopy = false)
+    {
+        var data = new ImageEditHistory { ImageIndex = ImageIndexVar.Get() };
+        _historyData = data;
+
+        if (bankCopy)
+        {
+            data.OldData = Canvas.GetSlice(0, 0, 256, 256);
+        }
+        else
+        {
+            data.FocusPos = (FocusXVar.Get(), FocusYVar.Get());
+            data.OldCanvas = Canvas.GetSlice(FocusXVar.Get() * 8, FocusYVar.Get() * 8, 16, 16);
+        }
+    }
+
+    public void AddPostHistory(bool bankCopy = false)
+    {
+        var data = _historyData!;
+
+        if (bankCopy)
+        {
+            data.NewData = Canvas.GetSlice(0, 0, 256, 256);
+            if (!CanvasData.SliceEquals(data.NewData, data.OldData!))
+            {
+                AddHistory(data);
+            }
+        }
+        else
+        {
+            data.NewCanvas = Canvas.GetSlice(FocusXVar.Get() * 8, FocusYVar.Get() * 8, 16, 16);
+            if (!CanvasData.SliceEquals(data.NewCanvas, data.OldCanvas!))
+            {
+                AddHistory(data);
+            }
+        }
+    }
+
+    public void BankClipboardCopy() =>
+        _bankBuffer = Pyxel.Images[ImageIndexVar.Get()].GetSlice(0, 0, 256, 256);
+
+    public void BankClipboardCut()
+    {
+        AddPreHistory(bankCopy: true);
+        Pyxel.Images[ImageIndexVar.Get()].Rect(0, 0, 256, 256, 0);
+        AddPostHistory(bankCopy: true);
+    }
+
+    public void BankClipboardPaste()
+    {
+        if (_bankBuffer is null)
+        {
+            return;
+        }
+        AddPreHistory(bankCopy: true);
+        Pyxel.Images[ImageIndexVar.Get()].SetSlice(0, 0, _bankBuffer);
+        AddPostHistory(bankCopy: true);
+    }
+
+    void ICanvasPanelHost<Color>.UpdateTileFocus()
+    {
+    }
+
+    void ICanvasPanelHost<Color>.DrawCanvas(
+        int panelX, int panelY, ICanvas<Color> canvas, int offsetX, int offsetY) =>
+        // blt scales centered on (x + (w-1)/2, y + (h-1)/2); shift dest by
+        // (w * (scale - 1) + 1) / 2 = 56.5 so the 128x128 output aligns to
+        // (panelX + 1, panelY + 1). Integer 57 rounds the center identically.
+        Pyxel.Blt(panelX + 57, panelY + 57, ((ImageCanvas)canvas).Image,
+            offsetX, offsetY, 16, 16, scale: 8);
 
     // Helpers
 
@@ -80,7 +167,8 @@ public sealed class ImageEditor : EditorBase, ICanvasHost
         {
             FocusXVar.Set(data.FocusPos.X);
             FocusYVar.Set(data.FocusPos.Y);
-            CanvasVar.Get().SetSlice(FocusXVar.Get() * 8, FocusYVar.Get() * 8,
+            Pyxel.Images[ImageIndexVar.Get()].SetSlice(
+                FocusXVar.Get() * 8, FocusYVar.Get() * 8,
                 (old ? data.OldCanvas : data.NewCanvas)!);
         }
     }

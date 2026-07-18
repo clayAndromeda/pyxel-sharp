@@ -104,7 +104,13 @@ wasm レガシー (→ DroppedFiles で代替)。
   検証: EditorSmoke (headless 19 項目: パレット合成/鉛筆/undo/redo/カラーピッカー/
   ショートカット/Ctrl+S 保存/タブ切替、全パス) + ウィンドウ起動確認。目視比較は未
 - [ ] スライス 1 残: Python 版エディタとの目視比較 (ユーザー確認待ち)
-- [ ] スライス 2: TilemapEditor (canvas_panel 再利用 + tilemap_viewer)
+- [x] スライス 2: TilemapEditor (2026-07-19)。CanvasPanel を ICanvas&lt;TValue&gt; で
+  ジェネリック化 (Color/Tile、Python のダックタイピング代替)、モード固有処理は
+  ICanvasPanelHost&lt;TValue&gt; で各エディタへ。TilemapViewer + タイルスタンプ
+  (EMPTY_TILE 番兵 + Python 式 Mod)。副産物: Pyxel.Load 時にバンクラッパーの
+  キャッシュを無効化する修正 (load はバンクを差し替えるため旧ハンドルが陳腐化
+  していた。Detach + Invalidate)。EditorSmoke 32 項目 (pyxres ラウンドトリップ
+  含む) 全パス。目視比較は未
 - [ ] スライス 3: SoundEditor (field_cursor + piano_keyboard / piano_roll / octave_bar /
   sound_field / sound_selector)
 - [ ] スライス 4: MusicEditor (music_field) + 総仕上げ

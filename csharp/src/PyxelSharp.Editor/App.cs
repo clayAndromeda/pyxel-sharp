@@ -90,7 +90,7 @@ public sealed class App : Widget
         _editors =
         [
             new ImageEditor(this),
-            new PlaceholderEditor(this, "TILEMAP"),
+            new TilemapEditor(this),
             new PlaceholderEditor(this, "SOUND"),
             new PlaceholderEditor(this, "MUSIC"),
         ];
