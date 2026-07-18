@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "clayAndromeda",
+  "classifications": ["Game", "Pyxel"],
+  "identity": "PyxelSharp.Game",
+  "name": "Pyxel game (PyxelSharp)",
+  "shortName": "pyxel",
+  "sourceName": "PyxelGame",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  }
+}

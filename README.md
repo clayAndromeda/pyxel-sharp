@@ -19,6 +19,30 @@ void Draw()
 }
 ```
 
+## 導入 (NuGet ローカルフィード)
+
+ビルド環境 (Rust/LLVM/CMake) なしでゲームを書くには、ローカルフィードの NuGet パッケージを使う。
+
+```powershell
+# 1. (初回のみ、このリポジトリで) パッケージをビルドしてフィードに出力
+tools\Pack.ps1                       # 既定フィード: %USERPROFILE%\.nuget-local
+
+# 2. (初回のみ) フィードとテンプレートを登録
+dotnet nuget add source "$env:USERPROFILE\.nuget-local" --name pyxel-local
+dotnet new install PyxelSharp.Templates
+
+# 3. ゲームを作る
+dotnet new pyxel -o MyGame
+cd MyGame
+dotnet run
+```
+
+配布用 exe は `dotnet publish -c Release -r win-x64 --self-contained` で作成できる
+(`runtimes/win-x64/native/pyxel_bind_cs.dll` が自動同梱される)。
+
+.pyxres リソースの編集は当面 Python 版 pyxel のエディタ (`pip install pyxel` → `pyxel edit`)
+を併用する (フォーマット共通)。C# 版エディタは Stage 5 で移植予定。
+
 ## 構成
 
 | パス | 内容 |
@@ -26,8 +50,10 @@ void Draw()
 | `pyxel/` | 本家 Pyxel (git submodule、無改変) |
 | `rust/pyxel-bind-cs/` | `extern "C"` バインディングクレート (csbindgen が C# P/Invoke を自動生成) |
 | `csharp/src/PyxelSharp/` | 公開 API (`static class Pyxel`, `Key` enum, `Color` struct) + 自動生成 P/Invoke (`NativeMethods.g.cs`) |
-| `csharp/samples/` | サンプル (`BouncingBall`, `HeadlessSmoke`) |
+| `csharp/samples/` | サンプル (`BouncingBall`, `HelloPyxel`, `JumpGame`, `HeadlessSmoke`) |
+| `csharp/templates/` | `dotnet new pyxel` テンプレートパッケージ |
 | `tools/Generate-KeyEnum.ps1` | `key.rs` → `Key.g.cs` 生成スクリプト |
+| `tools/Pack.ps1` | NuGet パッケージをローカルフィードへ出力 |
 
 ## ビルド
 

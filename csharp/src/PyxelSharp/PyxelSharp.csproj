@@ -6,6 +6,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>PyxelSharp</RootNamespace>
+    <!-- NuGet package metadata (local feed distribution; see docs/TODO.md Stage 4) -->
+    <PackageId>PyxelSharp</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>clayAndromeda</Authors>
+    <Description>C# binding for the Pyxel retro game engine (bundles pyxel-core v2.9.8, win-x64 native included).</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/clayAndromeda/pyxel-sharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/clayAndromeda/pyxel-sharp</RepositoryUrl>
+    <PackageTags>pyxel;game;gamedev;retro</PackageTags>
     <RustCrateDir>$(MSBuildThisFileDirectory)..\..\..\rust\pyxel-bind-cs\</RustCrateDir>
     <RustProfile>release</RustProfile>
     <RustDll>$(RustCrateDir)target\$(RustProfile)\pyxel_bind_cs.dll</RustDll>
@@ -25,7 +34,8 @@
     <Error Condition="!Exists('$(RustDll)')"
            Text="pyxel_bind_cs.dll not found at $(RustDll). Run 'cargo build --release --features sdl2_static' in rust/pyxel-bind-cs first." />
     <ItemGroup>
-      <None Include="$(RustDll)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+      <None Include="$(RustDll)" CopyToOutputDirectory="PreserveNewest" Visible="false"
+            Pack="true" PackagePath="runtimes/win-x64/native/" />
     </ItemGroup>
   </Target>
 

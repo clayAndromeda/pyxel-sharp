@@ -66,14 +66,16 @@ Rust/LLVM/CMake なしにゲームが書ける状態。win-x64 のみ。バー�
 (0.1.0 開始、同梱する本家 pyxel バージョンはパッケージ説明に明記)。TFM は net10.0 のまま
 (NuGet.org 公開を決めた時点で net8.0 引き下げを検討)。
 
-- [ ] LICENSE 追加 (MIT + 本家 Pyxel への帰属表記) → リポジトリを public で `git push`
-  (origin = github.com/clayAndromeda/pyxel-sharp、未 push)
-- [ ] NuGet パッケージ化: `runtimes/win-x64/native/pyxel_bind_cs.dll` 同梱、
-  pack 時のみ cargo build を要求 (消費側プロジェクトでは Rust ビルドを走らせない)
-- [ ] ローカルフィード運用の pack スクリプト + 手順 (README に消費側の設定方法を記載)
-- [ ] `dotnet new pyxel` テンプレートパッケージ: 最小トップレベル Program.cs 1 枚
-  (README の例と同じ Init/Run/Update/Draw)。専用 CLI ツールは作らない
-- [ ] 検証: 別ディレクトリの新規プロジェクトでフィードから導入 → 実行まで通す
+- [x] LICENSE 追加 (MIT + 本家 Pyxel への帰属表記) → リポジトリを public で `git push` (2026-07-18)
+- [x] NuGet パッケージ化: `runtimes/win-x64/native/pyxel_bind_cs.dll` 同梱、
+  pack 時のみ cargo build (`tools/Pack.ps1` 経由、pack は SkipRustBuild=true)。
+  消費側には MSBuild ターゲットが伝播しないため Rust ビルドは走らない (2026-07-18)
+- [x] ローカルフィード運用: `tools/Pack.ps1` (既定 `%USERPROFILE%\.nuget-local`) +
+  README に消費側手順 (nuget add source / new install) を記載 (2026-07-18)
+- [x] `dotnet new pyxel` テンプレートパッケージ (`csharp/templates/`、PyxelSharp.Templates):
+  最小トップレベル Program.cs 1 枚。専用 CLI ツールは作らない (2026-07-18)
+- [x] 検証: 別ディレクトリで new pyxel → フィードから restore → build →
+  headless 実行 (pyxel 2.9.8 確認) → ウィンドウ実行 5 秒生存、全パス (2026-07-18)
 - 後回し (合意済み): CI (GitHub Actions) は NuGet.org 公開検討時に整備。
   `package`/`app2exe` 相当は `dotnet publish` 手順を README に書くことで代替
 
