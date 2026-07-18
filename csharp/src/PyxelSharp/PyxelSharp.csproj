@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>PyxelSharp</RootNamespace>
+    <RustCrateDir>$(MSBuildThisFileDirectory)..\..\..\rust\pyxel-bind-cs\</RustCrateDir>
+    <RustProfile>release</RustProfile>
+    <RustDll>$(RustCrateDir)target\$(RustProfile)\pyxel_bind_cs.dll</RustDll>
+    <!-- Falls back to the default LLVM install location when the env var is not set -->
+    <LibClangPath Condition="'$(LIBCLANG_PATH)' != ''">$(LIBCLANG_PATH)</LibClangPath>
+    <LibClangPath Condition="'$(LibClangPath)' == ''">C:\Program Files\LLVM\lib</LibClangPath>
+  </PropertyGroup>
+
+  <!-- Builds pyxel_bind_cs.dll (which also regenerates NativeMethods.g.cs) and
+       copies it next to the managed output. Set SkipRustBuild=true when the DLL
+       is already built (e.g. sandboxed CI steps). -->
+  <Target Name="BuildRustBinding" BeforeTargets="AssignTargetPaths">
+    <Exec Condition="'$(SkipRustBuild)' != 'true'"
+          Command="cargo build --$(RustProfile) --features sdl2_static"
+          WorkingDirectory="$(RustCrateDir)"
+          EnvironmentVariables="LIBCLANG_PATH=$(LibClangPath)" />
+    <Error Condition="!Exists('$(RustDll)')"
+           Text="pyxel_bind_cs.dll not found at $(RustDll). Run 'cargo build --release --features sdl2_static' in rust/pyxel-bind-cs first." />
+    <ItemGroup>
+      <None Include="$(RustDll)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    </ItemGroup>
+  </Target>
+
+</Project>

@@ -1,0 +1,9 @@
+# Rust
+target/
+
+# .NET
+bin/
+obj/
+*.user
+
+csharp/.idea/

@@ -1,0 +1,22 @@
+[package]
+name = "pyxel-bind-cs"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "pyxel_bind_cs"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyxel-core = { path = "../../pyxel/crates/pyxel-core" }
+
+[build-dependencies]
+csbindgen = "1.9"
+
+[features]
+default = []
+sdl2_dynamic = ["pyxel-core/sdl2_dynamic"]
+sdl2_static = ["pyxel-core/sdl2_static"]
+
+[workspace]

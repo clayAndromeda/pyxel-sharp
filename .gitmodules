@@ -1,0 +1,3 @@
+[submodule "pyxel"]
+	path = pyxel
+	url = https://github.com/kitao/pyxel.git
