@@ -6,7 +6,8 @@ license = "MIT"
 
 [lib]
 name = "pyxel_bind_cs"
-crate-type = ["cdylib"]
+# cdylib for desktop P/Invoke, staticlib for the .NET browser-wasm link
+crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 pyxel-core = { path = "../../pyxel/crates/pyxel-core" }
