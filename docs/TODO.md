@@ -125,6 +125,32 @@ wasm レガシー (→ DroppedFiles で代替)。
 - [ ] 仕上げ: Python 版エディタとの目視比較 (ユーザー確認待ち)。
   自動テストで拾えない見た目・操作感・音の確認
 
+## Stage 6: Web 対応 (2026-07-19 設計レビューで合意)
+
+ゴール: 自作 PyxelSharp ゲームを `dotnet publish` で静的サイト化しブラウザで配布できる
+(本家 app2html 相当)。前提知識: pyxel-core は emscripten 対応済み
+(platform 層に emscripten_set_main_loop 分岐あり、本家 Web 版と同じコア)。
+
+方針 (合意済み):
+- **アプリ形態**: wasmbrowser (Microsoft.NET.Sdk.WebAssembly、UI フレームワークなし)。
+  Rust クレートを wasm32-unknown-emscripten の staticlib でビルドし
+  NativeFileReference でリンク。SDL2 は emscripten ポート (-sUSE_SDL=2) に切替
+- **実行方式**: まずインタプリタ。30fps 未達なら AOT 検討。配布 15-30MB 許容
+- **リスク方針**: スパイク先行。BouncingBall がブラウザで動く最小構成を go/no-go
+  判断点にする。最大リスクは .NET wasm-tools の emscripten バージョンと
+  Rust/SDL2 側の整合。失敗時は原因と代替案を持ち帰って再レビュー
+- **スコープ**: デスクトップブラウザ (最新 Chrome/Edge) のみ。スマホ (タッチ/
+  仮想ゲームパッド)・エディタ Web 版・Launcher/Code Maker 相当は対象外
+- **検証/公開**: ローカル HTTP サーバで確認 → 本実装後 GitHub Pages に
+  BouncingBall デモ公開
+- ツールチェーン追加許可済み: wasm-tools/wasm-experimental ワークロード +
+  rustup wasm32-unknown-emscripten + emsdk (専用ディレクトリに隔離、2-3GB)
+
+- [ ] スパイク: BouncingBall がブラウザで描画・入力とも動く最小構成 (go/no-go)
+- [ ] (go 後) リポジトリ構成化: Web 用 csproj / ビルドスクリプト / テンプレート反映
+- [ ] (go 後) GitHub Pages デモ + README 手順
+- [ ] (将来) スマホ対応: タッチ操作・仮想ゲームパッド (本家 gamepad 実装の移植)
+
 ## その他 (時期未定)
 
 - [ ] Linux / macOS ビルド対応 (pyxel-core は SDL2 なので原理的には可能。
