@@ -155,40 +155,31 @@ wasm レガシー (→ DroppedFiles で代替)。
 ### 本実装の残作業 (スパイク成果のリポジトリ化)
 
 検証残:
-- [ ] 可視タブでの目視確認 (640x480 でボールが滑らかに跳ねるか、体感 fps)。
-  CSS 修正のリロード確認待ち (ユーザー)
-- [ ] キーボード / マウス入力の動作確認 (SDL イベントがブラウザから届くか。
-  非 US 配列の補正 `_scanCorrection` はスタブ [] のままで英字配列相当になる点に注意)
+- [x] 可視タブでの目視確認: リロード後 640x480 でボール動作をユーザー確認 (2026-07-20)
+- [ ] キーボード / マウス入力の動作確認 (MOUSE 座標表示をサンプルに追加済み。
+  Pages デモで確認。非 US 配列の補正 `_scanCorrection` はスタブ [] のままで
+  英字配列相当になる点に注意)
 - [ ] 音声の動作確認 (WebAudio 経由。ブラウザの自動再生制限があるため
   「クリックで開始」ゲート等のユーザー操作トリガーが必要になる見込み)
 
-リポジトリ組込:
-- [ ] `csharp/samples/BouncingBall.Web` としてスパイクを移植。
-  検証ハックの除去 (forceRaf ポリフィル / trace / 診断 console.log /
-  published コピーへの手パッチ) と、レスポンシブ CSS
-  (アスペクト比維持: `width: min(90vw, calc(90vh * 4 / 3))` 系) 化
-- [ ] Web ホスト資産の共通化: index.html 雛形 (canvas CSS + JS スタブ 3 種
-  `_readVirtualGamepadBitmask` / `_scanCorrection` / `resetPyxel`) と
-  main.js グルー (`dotnet.create()` → `withModuleConfig({canvas, noExitRuntime})` →
-  `[JSExport]` Start 呼び出し + 'unwind' 捕捉) を、サンプル内コピーでなく
-  再利用可能な形に整理 (props/targets or コンテンツ NuGet を検討)
-- [ ] emcc.exe シム (`Command::new("emcc")` が .bat を解決できない問題の回避) を
-  `tools/emcc-shim/` としてリポジトリに収録
-- [ ] `tools/Build-Wasm.ps1`: 前提チェック (wasm-tools / emsdk 3.1.56 /
-  rustup ターゲット + rust-src) → `embuilder build sdl2` → シムビルド →
-  cargo staticlib (nightly + build-std + panic=abort) → `.a` リネーム配置 →
-  `dotnet publish` までの一発化。emsdk パスのハードコード除去
-  (EMSDK 環境変数 / 引数化。csproj の `-L` フラグも同様にプロパティ化)
-- [ ] wasm 用 csproj 断片の整理: `NativeFileReference` / `EmccExtraLDFlags`
-  (フォワードスラッシュ必須) / `WasmRunWasmOpt=false` + `-O0` リンク回避策に
-  「emscripten 更新時に外す」旨のコメントを付けて共通 props へ
+リポジトリ組込 (2026-07-20 完了):
+- [x] `csharp/samples/BouncingBall.Web`: 検証ハック除去 + レスポンシブ CSS
+  (forceRaf はテスト補助として残置・文書化)。MOUSE 座標表示を追加
+- [x] 追加の必須知見: **marshal-ilgen コンポーネント** — 既定の wasm リンクは
+  スタブ版で bool 引数 P/Invoke (Pyxel.Mouse 等) が mono assert 死する。
+  `<_MonoComponent Include="marshal-ilgen" />` で本物をリンク (csproj 参照)
+- [x] emcc.exe シムを `tools/emcc-shim/` に収録 (EMSDK 環境変数参照に一般化)
+- [x] `tools/Build-Wasm.ps1`: 前提チェック → embuilder → シム → cargo staticlib →
+  publish の一発化。EmsdkRoot は EMSDK env / 引数化、csproj 側も
+  `$(EmsdkRoot)` プロパティ化 (フォワードスラッシュ変換込み)
+- [ ] Web ホスト資産 (index.html 雛形 / JS スタブ / main.js グルー) の共通化
+  (props/targets or コンテンツ NuGet)。第 2 サンプル (JumpGame.Web) 追加時に実施
 
-公開・文書:
-- [ ] GitHub Pages に BouncingBall デモを公開 (publish 出力を gh-pages へ。
-  .br/.gz 事前圧縮は Pages では自動配信されないため素の配信でよい)
-- [ ] README に Web ビルド手順 (前提ツール、Build-Wasm.ps1、ローカル確認、
-  itch.io 等へは publish/wwwroot を zip する旨) を追記
-- [ ] WEB_DESIGN.md を本実装後の最終構成に合わせて更新
+公開・文書 (2026-07-20 完了):
+- [x] GitHub Pages デモ公開: https://clayandromeda.github.io/pyxel-sharp/
+  (gh-pages ブランチに publish/wwwroot を配置、.nojekyll 付き)
+- [x] README に Web セクション (前提・Build-Wasm.ps1・配布方法・デモ URL)
+- [x] WEB_DESIGN.md を確定レシピで更新 (marshal-ilgen 含む)
 
 品質・性能 (計測してから判断):
 - [ ] 体感 fps 計測。30fps 未達なら `RunAOTCompilation=true` を試す (合意済み方針)

@@ -40,6 +40,24 @@ dotnet run
 配布用 exe は `dotnet publish -c Release -r win-x64 --self-contained` で作成できる
 (`runtimes/win-x64/native/pyxel_bind_cs.dll` が自動同梱される)。
 
+## Web (ブラウザで動かす)
+
+本家 `app2html` 相当。ゲームを .NET browser-wasm + emscripten で静的サイト化できる。
+デモ: https://clayandromeda.github.io/pyxel-sharp/
+
+```powershell
+# 前提: dotnet workload install wasm-tools (emscripten 3.1.56 同梱) と、
+# 同じバージョンの emsdk (install/activate 済み)、
+# rustup: nightly ツールチェーンに wasm32-unknown-emscripten + rust-src
+
+tools\Build-Wasm.ps1        # SDL2 ポート → Rust staticlib → dotnet publish
+# 出力: csharp\samples\BouncingBall.Web\bin\Release\net10.0\publish\wwwroot
+# 任意の静的 HTTP サーバで配信 (itch.io へは wwwroot を zip)
+```
+
+技術詳細 (ビルドレシピ、emscripten の制約と回避策) は
+[docs/WEB_DESIGN.md](docs/WEB_DESIGN.md) を参照。
+
 .pyxres リソースの編集にはリソースエディタ (`pyxel edit` 相当の C# 移植) を使う:
 
 ```powershell
