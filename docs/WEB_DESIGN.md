@@ -181,10 +181,14 @@ rAF → Rust main loop → UnmanagedCallersOnly 経由で毎フレーム呼ば�
 
 ### 残課題 (本実装で対応)
 
+- [x] canvas サイズ問題は解決 (2026-07-20): **emscripten の SDL2 は canvas の
+  CSS サイズをフレームバッファサイズとして採用する** (pyxel が計算した
+  ウィンドウサイズより優先)。CSS 未指定の canvas は ~1px に潰れて 3x3 表示に
+  なる。ホストページで `canvas { width: 640px; height: 480px; }` のように
+  明示するのが必須 (本家 pyxel.js も CSS でサイズ制御)。本実装ではレスポンシブ
+  CSS (アスペクト比維持) にする
 - [ ] 可視タブでの目視確認 (ボール描画・体感 fps)。非表示タブでは rAF が止まる
   (検証は setTimeout ポリフィル `?forceRaf=1` で実施)
-- [ ] canvas サイズ: 非表示ペインでは 3x3 になった。可視状態での挙動確認と
-  本家風の CSS (width 100% 等) 整備
 - [ ] キーボード/マウス入力の動作確認
 - [ ] リポジトリ構成化: csharp/samples/BouncingBall.Web + tools/Build-Wasm.ps1
   (emsdk セットアップ + cargo staticlib + publish の一発化)、スパイクの
