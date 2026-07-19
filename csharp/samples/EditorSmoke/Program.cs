@@ -146,6 +146,67 @@ Check(Pyxel.Tilemaps[0].Pget(0, 0) == new Tile(2, 1), "pyxres roundtrip keeps ti
 Check(Pyxel.Tilemaps[0].Pget(5, 5) == new Tile(0, 0), "pyxres roundtrip resets later edit");
 Check(Pyxel.Tilemaps[0].ImageSourceIndex == 1, "pyxres roundtrip keeps imgsrc");
 
+// --- Slice 3: sound editor ---
+app.EditorTypeVar.Set(2);
+Frame();
+var soundEditor = (SoundEditor)app.Editors[2];
+Check(soundEditor.IsVisible, "sound editor visible");
+Check(soundEditor.SpeedVar.Get() == Pyxel.Sounds[0].Speed, "speed picker mirrors sound");
+
+// Piano roll click: view x=0 (screen 32), note 30 (screen y = 26 + 29*2 = 84)
+Check(Pyxel.Sounds[0].Notes.Length == 0, "notes initially empty");
+Pyxel.SetMousePos(32, 84);
+Pyxel.SetBtn(Key.MouseButtonLeft, true);
+Frame();
+Pyxel.SetBtn(Key.MouseButtonLeft, false);
+Frame();
+Check(Pyxel.Sounds[0].Notes is [30], $"piano roll click -> notes [{string.Join(",", Pyxel.Sounds[0].Notes)}]");
+
+// Undo / redo
+Check(soundEditor.CanUndo, "sound undo available");
+soundEditor.Undo();
+Check(Pyxel.Sounds[0].Notes.Length == 0, "sound undo reverts");
+soundEditor.Redo();
+Check(Pyxel.Sounds[0].Notes is [30], "sound redo reapplies");
+
+// Keyboard note entry: hold Z (note 24 at octave 2) and press Enter
+Pyxel.SetBtn(Key.Z, true);
+Frame();
+Check(soundEditor.NoteVar.Get() == 24, $"piano key Z -> note {soundEditor.NoteVar.Get()}");
+Pyxel.SetBtn(Key.Return, true);
+Frame();
+Pyxel.SetBtn(Key.Return, false);
+Pyxel.SetBtn(Key.Z, false);
+Frame();
+Check(Pyxel.Sounds[0].Notes is [24, 30], $"enter inserts note [{string.Join(",", Pyxel.Sounds[0].Notes)}]");
+
+// Tone entry: click TON row in the sound field, then press S (tone 1)
+Pyxel.SetMousePos(32, 150);
+Pyxel.SetBtn(Key.MouseButtonLeft, true);
+Frame();
+Pyxel.SetBtn(Key.MouseButtonLeft, false);
+Frame();
+Pyxel.SetBtn(Key.S, true);
+Frame();
+Pyxel.SetBtn(Key.S, false);
+Frame();
+Check(Pyxel.Sounds[0].Tones is [1], $"sound field S -> tones [{string.Join(",", Pyxel.Sounds[0].Tones)}]");
+
+// Speed picker writes through to the sound
+soundEditor.SpeedVar.Set(20);
+Check(Pyxel.Sounds[0].Speed == 20, $"speed picker -> {Pyxel.Sounds[0].Speed}");
+
+// Space starts and stops playback without crashing headless
+Pyxel.SetBtn(Key.Space, true);
+Frame();
+Pyxel.SetBtn(Key.Space, false);
+Frame();
+Pyxel.SetBtn(Key.Space, true);
+Frame();
+Pyxel.SetBtn(Key.Space, false);
+Frame();
+Check(true, "space play/stop cycle runs headless");
+
 File.Delete(resPath);
 
 if (failures > 0)

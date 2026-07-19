@@ -43,6 +43,36 @@ public static class EditorSettings
     public static readonly Color PanelSelectFrameColor = 15;
     public static readonly Color PanelSelectBorderColor = 0;
 
+    // Piano keyboard colors
+    public static readonly Color PianoKeyboardRestColor = 12;
+    public static readonly Color PianoKeyboardPlayColor = 14;
+
+    // Piano roll colors
+    public static readonly Color PianoRollCursorPlayColor = 14;
+    public static readonly Color PianoRollCursorEditColor = 6;
+    public static readonly Color PianoRollCursorSelectColor = 15;
+    public static readonly Color PianoRollBackgroundColor = 7;
+    public static readonly Color PianoRollNoteColor = 8;
+    public static readonly Color PianoRollRestColor = 5;
+
+    // Octave bar colors
+    public static readonly Color OctaveBarBackgroundColor = 7;
+    public static readonly Color OctaveBarColor = 13;
+
+    // Sound field colors
+    public static readonly Color SoundFieldDataNormalColor = 1;
+    public static readonly Color SoundFieldDataSelectColor = 7;
+    public static readonly Color SoundFieldCursorEditColor = 1;
+    public static readonly Color SoundFieldCursorSelectColor = 2;
+
+    // Music field colors
+    public static readonly Color MusicFieldBackgroundColor = 6;
+    public static readonly Color MusicFieldSoundNormalColor = 1;
+    public static readonly Color MusicFieldSoundSelectColor = 7;
+    public static readonly Color MusicFieldCursorPlayColor = 8;
+    public static readonly Color MusicFieldCursorEditColor = 1;
+    public static readonly Color MusicFieldCursorSelectColor = 2;
+
     public static bool IsModifierPressed() =>
         Pyxel.Btn(Key.Shift) || Pyxel.Btn(Key.Ctrl) || Pyxel.Btn(Key.Alt) || Pyxel.Btn(Key.Gui);
 }

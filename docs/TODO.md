@@ -111,8 +111,12 @@ wasm レガシー (→ DroppedFiles で代替)。
   キャッシュを無効化する修正 (load はバンクを差し替えるため旧ハンドルが陳腐化
   していた。Detach + Invalidate)。EditorSmoke 32 項目 (pyxres ラウンドトリップ
   含む) 全パス。目視比較は未
-- [ ] スライス 3: SoundEditor (field_cursor + piano_keyboard / piano_roll / octave_bar /
-  sound_field / sound_selector)
+- [x] スライス 3: SoundEditor (2026-07-19)。field_cursor + piano_keyboard /
+  piano_roll / octave_bar / sound_field。コピー交換配列 (sound.Notes 等) は
+  FieldView (get→変更→set のリストビュー) で Python のライブリスト意味論を再現。
+  speed_var の hasattr 判定は SetSpeedVar の遅延注入で代替。EditorSmoke 44 項目
+  全パス (ピアノロール入力/undo/鍵盤+Enter/音色入力/speed/再生)。
+  sound_selector は music 用のためスライス 4 へ
 - [ ] スライス 4: MusicEditor (music_field) + 総仕上げ
 - [ ] dotnet tool 化 + Pack.ps1 組込 + README 更新
 - それまでの .pyxres 編集は Python 版 pyxel のエディタを併用 (フォーマット共通)
