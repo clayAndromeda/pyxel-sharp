@@ -125,7 +125,7 @@ pyxel-core の build.rs がソースからビルド・静的リンクするた�
 | 2 | Image/Tilemap/Font のオペークハンドル、リソースファイル (load/save)、blt/bltm | 完了 (2026-07-18) |
 | 3 | audio (Sound/Music/Channel/Tone、play/playm)、math モジュール → Python 版フルパリティ | 完了 (2026-07-18) |
 | 4 | 導入体験: GitHub 公開 push、NuGet パッケージ化 (ローカルフィード)、`dotnet new pyxel` テンプレート | 未着手 |
-| 5 | リソースエディタ (pyxel edit 相当) の C# 移植 | 未着手 |
+| 5 | リソースエディタ (pyxel edit 相当) の C# 移植 → dotnet tool `pyxel-edit` | 完了 (2026-07-19、目視比較のみ残) |
 
 具体的な作業項目は [TODO.md](TODO.md) で管理する。
 

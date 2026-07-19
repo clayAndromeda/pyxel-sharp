@@ -117,9 +117,13 @@ wasm レガシー (→ DroppedFiles で代替)。
   speed_var の hasattr 判定は SetSpeedVar の遅延注入で代替。EditorSmoke 44 項目
   全パス (ピアノロール入力/undo/鍵盤+Enter/音色入力/speed/再生)。
   sound_selector は music 用のためスライス 4 へ
-- [ ] スライス 4: MusicEditor (music_field) + 総仕上げ
-- [ ] dotnet tool 化 + Pack.ps1 組込 + README 更新
-- それまでの .pyxres 編集は Python 版 pyxel のエディタを併用 (フォーマット共通)
+- [x] スライス 4: MusicEditor (music_field + sound_selector)。seqs は NUM_CHANNELS に
+  正規化。PlaceholderEditor 撤去で 4 タブ全て実働。EditorSmoke 51 項目全パス (2026-07-19)
+- [x] dotnet tool 化: PackAsTool (コマンド名 `pyxel-edit`、native dll + assets を
+  tools/ に同梱) + Pack.ps1 組込 + README 更新。グローバルインストール →
+  `pyxel-edit <file>` 起動まで検証済み (2026-07-19)
+- [ ] 仕上げ: Python 版エディタとの目視比較 (ユーザー確認待ち)。
+  自動テストで拾えない見た目・操作感・音の確認
 
 ## その他 (時期未定)
 

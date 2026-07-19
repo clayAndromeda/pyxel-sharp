@@ -40,5 +40,9 @@ dotnet pack (Join-Path $repoRoot "csharp\templates\PyxelSharp.Templates.csproj")
     -c Release -o $Feed @versionArgs
 if ($LASTEXITCODE -ne 0) { throw "dotnet pack PyxelSharp.Templates failed ($LASTEXITCODE)" }
 
+dotnet pack (Join-Path $repoRoot "csharp\src\PyxelSharp.Editor\PyxelSharp.Editor.csproj") `
+    -c Release -o $Feed -p:SkipRustBuild=true @versionArgs
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack PyxelSharp.Editor failed ($LASTEXITCODE)" }
+
 Write-Host "Packed to $Feed"
 Get-ChildItem $Feed -Filter *.nupkg | ForEach-Object { Write-Host "  $($_.Name)" }

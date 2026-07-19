@@ -40,8 +40,12 @@ dotnet run
 配布用 exe は `dotnet publish -c Release -r win-x64 --self-contained` で作成できる
 (`runtimes/win-x64/native/pyxel_bind_cs.dll` が自動同梱される)。
 
-.pyxres リソースの編集は当面 Python 版 pyxel のエディタ (`pip install pyxel` → `pyxel edit`)
-を併用する (フォーマット共通)。C# 版エディタは Stage 5 で移植予定。
+.pyxres リソースの編集にはリソースエディタ (`pyxel edit` 相当の C# 移植) を使う:
+
+```powershell
+dotnet tool install --global PyxelSharp.Editor   # 初回のみ (フィード登録済み前提)
+pyxel-edit my_resource.pyxres                    # image/tilemap/sound/music の4タブ
+```
 
 ## 構成
 
@@ -50,7 +54,8 @@ dotnet run
 | `pyxel/` | 本家 Pyxel (git submodule、無改変) |
 | `rust/pyxel-bind-cs/` | `extern "C"` バインディングクレート (csbindgen が C# P/Invoke を自動生成) |
 | `csharp/src/PyxelSharp/` | 公開 API (`static class Pyxel`, `Key` enum, `Color` struct) + 自動生成 P/Invoke (`NativeMethods.g.cs`) |
-| `csharp/samples/` | サンプル (`BouncingBall`, `HelloPyxel`, `JumpGame`, `HeadlessSmoke`) |
+| `csharp/src/PyxelSharp.Editor/` | リソースエディタ (本家 Python editor の移植、dotnet tool `pyxel-edit`) |
+| `csharp/samples/` | サンプル (`BouncingBall`, `HelloPyxel`, `JumpGame`, `HeadlessSmoke`, `EditorSmoke`) |
 | `csharp/templates/` | `dotnet new pyxel` テンプレートパッケージ |
 | `tools/Generate-KeyEnum.ps1` | `key.rs` → `Key.g.cs` 生成スクリプト |
 | `tools/Pack.ps1` | NuGet パッケージをローカルフィードへ出力 |

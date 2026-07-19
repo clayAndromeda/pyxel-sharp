@@ -7,13 +7,33 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>PyxelSharp.Editor</RootNamespace>
     <AssemblyName>pyxel-edit</AssemblyName>
+    <!-- dotnet tool packaging: install from the local feed, run as pyxel-edit -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>pyxel-edit</ToolCommandName>
+    <PackageId>PyxelSharp.Editor</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>clayAndromeda</Authors>
+    <Description>Pyxel resource editor (pyxel edit equivalent) built on PyxelSharp. Run as pyxel-edit.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/clayAndromeda/pyxel-sharp</PackageProjectUrl>
+    <PackageTags>pyxel;editor;tool</PackageTags>
   </PropertyGroup>
+
+  <!-- The native binding and the editor sprite sheet must land in the tools
+       folder next to the assemblies; PackAsTool only packs build output. -->
+  <ItemGroup>
+    <None Include="..\..\..\rust\pyxel-bind-cs\target\release\pyxel_bind_cs.dll"
+          Pack="true" PackagePath="tools/net10.0/any/" Visible="false" />
+    <None Include="..\..\..\pyxel\python\pyxel\editor\assets\editor_220x160.png"
+          Pack="true" PackagePath="tools/net10.0/any/assets/" Visible="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PyxelSharp\PyxelSharp.csproj" />
     <!-- The editor sprite sheet comes from the upstream submodule unmodified -->
     <Content Include="..\..\..\pyxel\python\pyxel\editor\assets\editor_220x160.png"
-             Link="assets\editor_220x160.png" CopyToOutputDirectory="PreserveNewest" />
+             Link="assets\editor_220x160.png" CopyToOutputDirectory="PreserveNewest"
+             Pack="false" />
   </ItemGroup>
 
 </Project>
