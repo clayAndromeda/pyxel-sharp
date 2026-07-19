@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- emsdk root (must match the emscripten bundled with the .NET
+         workload; see docs/WEB_DESIGN.md). Defaults to the EMSDK env var
+         set by emsdk_env; tools/Build-Wasm.ps1 handles this. -->
+    <EmsdkRoot Condition="'$(EmsdkRoot)' == ''">$(EMSDK)</EmsdkRoot>
+    <!-- emcc response files require forward slashes -->
+    <_EmsdkSysrootLib>$([System.String]::Copy('$(EmsdkRoot)').Replace('\','/'))/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten</_EmsdkSysrootLib>
+    <!-- Link the SDL2 port prebuilt by emsdk (-sUSE_SDL=2 would try to build
+         the port inside the read-only dotnet pack cache) -->
+    <EmccExtraLDFlags>-L$(_EmsdkSysrootLib) -lSDL2 -lhtml5 -sALLOW_MEMORY_GROWTH=1</EmccExtraLDFlags>
+
+    <!-- TEMPORARY (remove when the .NET workload ships a newer emscripten):
+         Rust nightly LLVM records feature names (bulk-memory-opt etc.) that
+         emscripten 3.1.56's wasm-opt rejects, so skip binaryen entirely. -->
+    <WasmRunWasmOpt>false</WasmRunWasmOpt>
+    <EmccLinkOptimizationFlag>-O0</EmccLinkOptimizationFlag>
+  </PropertyGroup>
+
+  <Target Name="EnsureEmsdkRoot" BeforeTargets="Build"
+          Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
+    <Error Condition="'$(EmsdkRoot)' == ''"
+           Text="EmsdkRoot is not set. Run tools/Build-Wasm.ps1, or set the EMSDK environment variable (emsdk_env)." />
+  </Target>
+
+  <ItemGroup>
+    <!-- The default wasm link stubs out the marshal-ilgen runtime component,
+         which is needed for the bool parameters in PyxelSharp's P/Invokes
+         (mono asserts in stub_emit_marshal_ilgen without it) -->
+    <_MonoComponent Include="marshal-ilgen" />
+    <ProjectReference Include="..\..\src\PyxelSharp\PyxelSharp.csproj" />
+    <!-- Produced by tools/Build-Wasm.ps1 (cargo staticlib output, renamed so
+         the stem matches DllImport("pyxel_bind_cs")) -->
+    <NativeFileReference Include="pyxel_bind_cs.a" />
+  </ItemGroup>
+
+</Project>

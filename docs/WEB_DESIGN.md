@@ -174,6 +174,11 @@ rAF → Rust main loop → UnmanagedCallersOnly 経由で毎フレーム呼ば�
   呼ぶ (dotnet.run() の Main 経路だと unwind が dotnet.js の exit 処理に落ちて
   ループが死ぬ)。JS 側は `dotnet.create()` + `exports.GameEntry.Start()` を
   try/catch し `'unwind'` を握りつぶす。`withModuleConfig({ canvas, noExitRuntime: true })`
+- **marshal-ilgen コンポーネントが必須**: 既定の wasm リンクは
+  `libmono-component-marshal-ilgen-stub-static.a` (スタブ) を使うため、
+  bool 引数の P/Invoke (`Pyxel.Mouse(true)` 等) で mono が assert 死する。
+  csproj に `<_MonoComponent Include="marshal-ilgen" />` を追加して本物を
+  リンクする (BouncingBall.Web.csproj 参照)
 - **ホストページの JS スタブが必須** (本家 pyxel.js が提供しているもの):
   `_readVirtualGamepadBitmask = () => 0`、`_scanCorrection = []`、
   `resetPyxel = () => location.reload()`。

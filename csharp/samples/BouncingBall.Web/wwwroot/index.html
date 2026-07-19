@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Pyxel-Sharp Bouncing Ball</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 8px;
+      background: #222; color: #888; font-family: monospace;
+    }
+    /* Emscripten's SDL2 sizes its framebuffer from the canvas CSS size, so an
+       explicit size is required (an unstyled canvas collapses to ~1px). */
+    canvas {
+      width: min(90vw, calc(85vh * 4 / 3));
+      aspect-ratio: 4 / 3;
+      image-rendering: pixelated;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <p id="status">loading .NET runtime...</p>
+  <canvas id="canvas" width="160" height="120" tabindex="1"></canvas>
+  <script>
+    // JS hooks that pyxel-core's emscripten build expects the hosting page to
+    // provide (upstream's pyxel.js defines these; we stub them).
+    window._readVirtualGamepadBitmask = () => 0; // virtual gamepad: none
+    window._scanCorrection = [];                 // non-US key correction: off
+    window.resetPyxel = () => location.reload();
+
+    // Testing aid: drive the main loop with setTimeout when the tab is hidden
+    // (browsers stop requestAnimationFrame for hidden tabs). Used by headless
+    // verification; harmless otherwise.
+    if (new URLSearchParams(location.search).has('forceRaf')) {
+      window.requestAnimationFrame = cb => setTimeout(() => cb(performance.now()), 33);
+      window.cancelAnimationFrame = id => clearTimeout(id);
+    }
+  </script>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -7,3 +7,6 @@ obj/
 *.user
 
 csharp/.idea/
+
+# wasm staticlib staged by tools/Build-Wasm.ps1
+csharp/samples/*/pyxel_bind_cs.a
