@@ -146,12 +146,47 @@ tools/Build-Wasm.ps1              # embuilder + cargo staticlib + publish の一
 - 将来課題 (対象外): スマホのタッチ/仮想ゲームパッド、エディタ Web 版、
   AOT ビルドオプション、サイズ最適化 (IL トリミング)
 
-## 5. 環境の現状 (2026-07-19 時点)
+## 5. スパイク結果 (2026-07-20): **GO**
 
-| 項目 | 状態 |
-|---|---|
-| rustup wasm32-unknown-emscripten (stable/nightly) | 導入済み |
-| nightly-2026-07-14 + rust-src | 導入済み |
-| emsdk クローン (C:\Users\detec\emsdk) | 済 (install/activate は未、バージョン待ち) |
-| dotnet workload wasm-tools | **未 — UAC 承認待ちでブロック中** |
-| pyxel-bind-cs staticlib 化 | 済 (コミット予定) |
+BouncingBall がブラウザ (.NET browser-wasm) で動作。C# Update/Draw が
+rAF → Rust main loop → UnmanagedCallersOnly 経由で毎フレーム呼ばれ、
+座標が正しく進むことをコンソールログで確認した。
+
+### 確定した構成 (スパイクで検証済み)
+
+- .NET 10 wasm-tools の emscripten は **3.1.56** → emsdk 3.1.56 を
+  `C:\Users\detec\emsdk` に install/activate し `embuilder build sdl2`
+- Rust: `cargo +nightly-2026-07-14 rustc --release --target wasm32-unknown-emscripten
+  --features sdl2_dynamic "-Zbuild-std=std,panic_abort" --crate-type staticlib`
+  + `RUSTFLAGS="-C panic=abort -C target-feature=+simd128"`
+  (.NET 10 は -fwasm-exceptions リンクのため、プリビルド std の JS-EH と衝突する。
+  panic=abort + build-std で EH を排除するのが必須)
+- csproj: `NativeFileReference=pyxel_bind_cs.a` (lib 接頭辞を外して DllImport 名と一致
+  させる) + `EmccExtraLDFlags` に `-L<emsdkキャッシュ>/wasm32-emscripten -lSDL2 -lhtml5`
+  (パスは**フォワードスラッシュ必須**。-sUSE_SDL=2 は dotnet の読み取り専用パック
+  キャッシュにポートをビルドしようとして失敗するため直接リンク)
+- `WasmRunWasmOpt=false` + `EmccLinkOptimizationFlag=-O0`:
+  nightly LLVM が記録する新 feature 名 (bulk-memory-opt 等) を 3.1.56 の
+  wasm-opt が知らないため binaryen 工程を回避 (将来 emscripten 更新で解除可)
+- Windows では build.rs の `Command::new("emcc")` が emcc.bat を解決できない →
+  emcc.bat へ転送する **emcc.exe シム**を PATH 先頭に置く
+- **メインループ**: `Pyxel.Run` は Main からではなく **[JSExport] メソッド経由**で
+  呼ぶ (dotnet.run() の Main 経路だと unwind が dotnet.js の exit 処理に落ちて
+  ループが死ぬ)。JS 側は `dotnet.create()` + `exports.GameEntry.Start()` を
+  try/catch し `'unwind'` を握りつぶす。`withModuleConfig({ canvas, noExitRuntime: true })`
+- **ホストページの JS スタブが必須** (本家 pyxel.js が提供しているもの):
+  `_readVirtualGamepadBitmask = () => 0`、`_scanCorrection = []`、
+  `resetPyxel = () => location.reload()`。
+  無いと初回フレームで ReferenceError → ループ停止 (エラーは静かに握られるので注意)
+
+### 残課題 (本実装で対応)
+
+- [ ] 可視タブでの目視確認 (ボール描画・体感 fps)。非表示タブでは rAF が止まる
+  (検証は setTimeout ポリフィル `?forceRaf=1` で実施)
+- [ ] canvas サイズ: 非表示ペインでは 3x3 になった。可視状態での挙動確認と
+  本家風の CSS (width 100% 等) 整備
+- [ ] キーボード/マウス入力の動作確認
+- [ ] リポジトリ構成化: csharp/samples/BouncingBall.Web + tools/Build-Wasm.ps1
+  (emsdk セットアップ + cargo staticlib + publish の一発化)、スパイクの
+  forceRaf/trace ハックの除去
+- [ ] GitHub Pages デモ + README 手順
