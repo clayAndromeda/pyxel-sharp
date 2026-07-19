@@ -146,13 +146,77 @@ wasm レガシー (→ DroppedFiles で代替)。
 - ツールチェーン追加許可済み: wasm-tools/wasm-experimental ワークロード +
   rustup wasm32-unknown-emscripten + emsdk (専用ディレクトリに隔離、2-3GB)
 
-- [ ] スパイク: BouncingBall がブラウザで描画・入力とも動く最小構成 (go/no-go)
-- [ ] (go 後) リポジトリ構成化: Web 用 csproj / ビルドスクリプト / テンプレート反映
-- [ ] (go 後) GitHub Pages デモ + README 手順
-- [ ] (将来) スマホ対応: タッチ操作・仮想ゲームパッド (本家 gamepad 実装の移植)
+- [x] スパイク: BouncingBall がブラウザで動作、**GO 判定** (2026-07-20)。
+  確定ビルドレシピと解決した障害 6 件 (EH 衝突 / SDL2 ポート / wasm-opt /
+  emcc シム / unwind / JS スタブ) は [WEB_DESIGN.md](WEB_DESIGN.md) §5 参照。
+  canvas は CSS サイズ必須 (未指定だと ~1px に潰れる) も判明・解決済み。
+  スパイク成果物は scratchpad のみ (リポジトリ未組込)
+
+### 本実装の残作業 (スパイク成果のリポジトリ化)
+
+検証残:
+- [ ] 可視タブでの目視確認 (640x480 でボールが滑らかに跳ねるか、体感 fps)。
+  CSS 修正のリロード確認待ち (ユーザー)
+- [ ] キーボード / マウス入力の動作確認 (SDL イベントがブラウザから届くか。
+  非 US 配列の補正 `_scanCorrection` はスタブ [] のままで英字配列相当になる点に注意)
+- [ ] 音声の動作確認 (WebAudio 経由。ブラウザの自動再生制限があるため
+  「クリックで開始」ゲート等のユーザー操作トリガーが必要になる見込み)
+
+リポジトリ組込:
+- [ ] `csharp/samples/BouncingBall.Web` としてスパイクを移植。
+  検証ハックの除去 (forceRaf ポリフィル / trace / 診断 console.log /
+  published コピーへの手パッチ) と、レスポンシブ CSS
+  (アスペクト比維持: `width: min(90vw, calc(90vh * 4 / 3))` 系) 化
+- [ ] Web ホスト資産の共通化: index.html 雛形 (canvas CSS + JS スタブ 3 種
+  `_readVirtualGamepadBitmask` / `_scanCorrection` / `resetPyxel`) と
+  main.js グルー (`dotnet.create()` → `withModuleConfig({canvas, noExitRuntime})` →
+  `[JSExport]` Start 呼び出し + 'unwind' 捕捉) を、サンプル内コピーでなく
+  再利用可能な形に整理 (props/targets or コンテンツ NuGet を検討)
+- [ ] emcc.exe シム (`Command::new("emcc")` が .bat を解決できない問題の回避) を
+  `tools/emcc-shim/` としてリポジトリに収録
+- [ ] `tools/Build-Wasm.ps1`: 前提チェック (wasm-tools / emsdk 3.1.56 /
+  rustup ターゲット + rust-src) → `embuilder build sdl2` → シムビルド →
+  cargo staticlib (nightly + build-std + panic=abort) → `.a` リネーム配置 →
+  `dotnet publish` までの一発化。emsdk パスのハードコード除去
+  (EMSDK 環境変数 / 引数化。csproj の `-L` フラグも同様にプロパティ化)
+- [ ] wasm 用 csproj 断片の整理: `NativeFileReference` / `EmccExtraLDFlags`
+  (フォワードスラッシュ必須) / `WasmRunWasmOpt=false` + `-O0` リンク回避策に
+  「emscripten 更新時に外す」旨のコメントを付けて共通 props へ
+
+公開・文書:
+- [ ] GitHub Pages に BouncingBall デモを公開 (publish 出力を gh-pages へ。
+  .br/.gz 事前圧縮は Pages では自動配信されないため素の配信でよい)
+- [ ] README に Web ビルド手順 (前提ツール、Build-Wasm.ps1、ローカル確認、
+  itch.io 等へは publish/wwwroot を zip する旨) を追記
+- [ ] WEB_DESIGN.md を本実装後の最終構成に合わせて更新
+
+品質・性能 (計測してから判断):
+- [ ] 体感 fps 計測。30fps 未達なら `RunAOTCompilation=true` を試す (合意済み方針)
+- [ ] 配布サイズ計測 (現状 ~30MB 非圧縮)。必要なら IL トリミング /
+  `-O0` リンクの見直し (wasm-opt 回避策の解除が前提)
+- [ ] Rust 側 wasm ビルドの安定化: nightly-2026-07-14 固定を rust-toolchain 等で
+  明示 (build-std が nightly 依存のため)。将来 .NET の emscripten が更新されたら
+  wasm-opt 回避と -O0 を解除して再計測
+
+アセット対応 (実ゲームに必須、BouncingBall では未検証):
+- [ ] .pyxres / 画像 / フォントのロード: emscripten 仮想 FS (MEMFS) への
+  プリロード方法を確立 (dotnet.js の VFS 機能 or Module.preRun)。
+  JumpGame.Web を第 2 サンプルとして移植して検証するのが望ましい
+
+### 将来拡張 (Stage 6 スコープ外と合意済み)
+
+- [ ] スマホ対応: タッチ操作・仮想ゲームパッド (本家 gamepad 実装 +
+  `_readVirtualGamepadBitmask` の実装移植)
+- [ ] `dotnet new pyxel-web` テンプレート (PyxelSharp.Templates への追加)
+- [ ] エディタ (pyxel-edit) の Web 実行 (ファイル I/O の設計が別途必要)
 
 ## その他 (時期未定)
 
+- [ ] NuGet.org 公開 (Stage 4 で「ローカルフィードでまず自分用」と合意した際の後回し分)。
+  セットで: CI (GitHub Actions windows-latest: cargo + dotnet build + HeadlessSmoke +
+  EditorSmoke + pack)、TFM の net8.0 (LTS) 引き下げ検討、パッケージ README 整備
 - [ ] Linux / macOS ビルド対応 (pyxel-core は SDL2 なので原理的には可能。
   runtimes/ 構造はマルチプラットフォーム前提で設計しておく)
 - [ ] Python サンプル (pyxel/python/pyxel/examples 01〜) の移植で網羅検証 (Stage 3 残)
+- [ ] 本家 pyxel サブモジュールの更新運用 (key.rs 差分 → Generate-KeyEnum.ps1 再実行、
+  エディタ移植の差分追従、web ビルドの emscripten バージョン整合の再確認)
