@@ -207,6 +207,40 @@ Pyxel.SetBtn(Key.Space, false);
 Frame();
 Check(true, "space play/stop cycle runs headless");
 
+// --- Slice 4: music editor ---
+app.EditorTypeVar.Set(3);
+Frame();
+var musicEditor = (MusicEditor)app.Editors[3];
+Check(musicEditor.IsVisible, "music editor visible");
+Check(Pyxel.Musics[0].Seqs.All(seq => seq.Length == 0), "music seqs initially empty");
+
+// Click CH0 cell 0, then click sound button 0 in the selector to insert it
+Pyxel.SetMousePos(34, 33);
+Pyxel.SetBtn(Key.MouseButtonLeft, true);
+Frame();
+Pyxel.SetBtn(Key.MouseButtonLeft, false);
+Frame();
+Pyxel.SetMousePos(20, 136);
+Pyxel.SetBtn(Key.MouseButtonLeft, true);
+Frame();
+Pyxel.SetBtn(Key.MouseButtonLeft, false);
+Frame();
+Check(Pyxel.Musics[0].Seqs[0] is [0],
+    $"sound selector click -> seqs[0] [{string.Join(",", Pyxel.Musics[0].Seqs[0])}]");
+
+// Undo / redo
+Check(musicEditor.CanUndo, "music undo available");
+musicEditor.Undo();
+Check(Pyxel.Musics[0].Seqs[0].Length == 0, "music undo reverts");
+musicEditor.Redo();
+Check(Pyxel.Musics[0].Seqs[0] is [0], "music redo reapplies");
+
+// Move the mouse away so the preview stops
+Pyxel.SetMousePos(0, 0);
+Frame();
+Frame();
+Check(true, "music editor preview stop runs headless");
+
 File.Delete(resPath);
 
 if (failures > 0)

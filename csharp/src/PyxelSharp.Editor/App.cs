@@ -92,7 +92,7 @@ public sealed class App : Widget
             new ImageEditor(this),
             new TilemapEditor(this),
             new SoundEditor(this),
-            new PlaceholderEditor(this, "MUSIC"),
+            new MusicEditor(this),
         ];
         OnEditorButtonChange(EditorTypeVar.Get());
 
