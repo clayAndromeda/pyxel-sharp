@@ -10,17 +10,26 @@
     <PackageId>PyxelSharp</PackageId>
     <Version>0.2.0</Version>
     <Authors>clayAndromeda</Authors>
-    <Description>C# binding for the Pyxel retro game engine (bundles pyxel-core v2.9.8, win-x64 native included).</Description>
+    <Description>C# binding for the Pyxel retro game engine (bundles pyxel-core v2.9.8, native binary for the packing OS included).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/clayAndromeda/pyxel-sharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/clayAndromeda/pyxel-sharp</RepositoryUrl>
     <PackageTags>pyxel;game;gamedev;retro</PackageTags>
     <RustCrateDir>$(MSBuildThisFileDirectory)..\..\..\rust\pyxel-bind-cs\</RustCrateDir>
     <RustProfile>release</RustProfile>
-    <RustDll>$(RustCrateDir)target\$(RustProfile)\pyxel_bind_cs.dll</RustDll>
-    <!-- Falls back to the default LLVM install location when the env var is not set -->
+    <!-- ネイティブ成果物はビルドした OS のものだけをパッケージに入れる (win は .dll / mac は .dylib) -->
+    <NativeLibFileName Condition="$([MSBuild]::IsOSPlatform('Windows'))">pyxel_bind_cs.dll</NativeLibFileName>
+    <NativeLibFileName Condition="$([MSBuild]::IsOSPlatform('OSX'))">libpyxel_bind_cs.dylib</NativeLibFileName>
+    <NativeLibFileName Condition="$([MSBuild]::IsOSPlatform('Linux'))">libpyxel_bind_cs.so</NativeLibFileName>
+    <NativeRid Condition="$([MSBuild]::IsOSPlatform('Windows'))">win-x64</NativeRid>
+    <NativeRid Condition="$([MSBuild]::IsOSPlatform('OSX'))">osx-arm64</NativeRid>
+    <NativeRid Condition="$([MSBuild]::IsOSPlatform('Linux'))">linux-x64</NativeRid>
+    <RustDll>$(RustCrateDir)target\$(RustProfile)\$(NativeLibFileName)</RustDll>
+    <!-- Windows のみ: LLVM 既定インストール先へのフォールバック (mac/linux は bindgen が自力で探す) -->
     <LibClangPath Condition="'$(LIBCLANG_PATH)' != ''">$(LIBCLANG_PATH)</LibClangPath>
-    <LibClangPath Condition="'$(LibClangPath)' == ''">C:\Program Files\LLVM\lib</LibClangPath>
+    <LibClangPath Condition="'$(LibClangPath)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">C:\Program Files\LLVM\lib</LibClangPath>
+    <!-- LIBCLANG_PATH は空文字で渡すと bindgen が探索を諦めるため、値があるときだけ渡す -->
+    <RustBuildEnv Condition="'$(LibClangPath)' != ''">LIBCLANG_PATH=$(LibClangPath)</RustBuildEnv>
   </PropertyGroup>
 
   <!-- Builds pyxel_bind_cs.dll (which also regenerates NativeMethods.g.cs) and
@@ -31,12 +40,12 @@
     <Exec Condition="'$(SkipRustBuild)' != 'true'"
           Command="cargo build --$(RustProfile) --features sdl2_static"
           WorkingDirectory="$(RustCrateDir)"
-          EnvironmentVariables="LIBCLANG_PATH=$(LibClangPath)" />
+          EnvironmentVariables="$(RustBuildEnv)" />
     <Error Condition="'$(SkipRustBuild)' != 'true' and !Exists('$(RustDll)')"
-           Text="pyxel_bind_cs.dll not found at $(RustDll). Run 'cargo build --release --features sdl2_static' in rust/pyxel-bind-cs first." />
+           Text="$(NativeLibFileName) not found at $(RustDll). Run 'cargo build --release --features sdl2_static' in rust/pyxel-bind-cs first." />
     <ItemGroup Condition="Exists('$(RustDll)')">
       <None Include="$(RustDll)" CopyToOutputDirectory="PreserveNewest" Visible="false"
-            Pack="true" PackagePath="runtimes/win-x64/native/" />
+            Pack="true" PackagePath="runtimes/$(NativeRid)/native/" />
     </ItemGroup>
   </Target>
 

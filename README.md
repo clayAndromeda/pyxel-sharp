@@ -22,6 +22,10 @@ void Draw()
 ## 導入 (NuGet ローカルフィード)
 
 ビルド環境 (Rust/LLVM/CMake) なしでゲームを書くには、ローカルフィードの NuGet パッケージを使う。
+パッケージにはパッケージを作った OS のネイティブバイナリだけが入る
+(Windows で pack → win-x64 用、macOS で pack → osx-arm64 用)。
+
+Windows:
 
 ```powershell
 # 1. (初回のみ、このリポジトリで) パッケージをビルドしてフィードに出力
@@ -37,13 +41,31 @@ cd MyGame
 dotnet run
 ```
 
-配布用 exe は `dotnet publish -c Release -r win-x64 --self-contained` で作成できる
-(`runtimes/win-x64/native/pyxel_bind_cs.dll` が自動同梱される)。
+macOS (Apple Silicon):
+
+```bash
+# 1. (初回のみ、このリポジトリで) パッケージをビルドしてフィードに出力
+tools/Pack.sh                        # 既定フィード: ~/.nuget-local
+
+# 2. (初回のみ) フィードとテンプレートを登録
+dotnet nuget add source "$HOME/.nuget-local" --name pyxel-local
+dotnet new install PyxelSharp.Templates
+
+# 3. ゲームを作る
+dotnet new pyxel -o MyGame
+cd MyGame
+dotnet run
+```
+
+配布用バイナリは `dotnet publish -c Release -r win-x64 --self-contained`
+(macOS は `-r osx-arm64`) で作成できる (`runtimes/<rid>/native/` の
+ネイティブバインディングが自動同梱される)。
 
 ## Web (ブラウザで動かす)
 
 本家 `app2html` 相当。ゲームを .NET browser-wasm + emscripten で静的サイト化できる。
 デモ: https://clayandromeda.github.io/pyxel-sharp/
+(Web ビルドは現状 Windows でのみ検証済み。macOS 対応はデスクトップのみ)
 
 ゲームを Web 化するだけなら、リポジトリ不要でテンプレートから作れる
 (PyxelSharp.Web パッケージが wasm staticlib とビルド設定を同梱。Rust は不要だが、
@@ -84,8 +106,8 @@ pyxel-edit my_resource.pyxres                    # image/tilemap/sound/music の
 | `csharp/src/PyxelSharp.Web/` | Web (browser-wasm) 共通ビルド設定 + 起動グルー (props / pyxel-boot.js / PyxelWebHost.cs)。`build/` + csproj は NuGet パッケージ版 (staticlib 同梱) |
 | `csharp/samples/` | サンプル (`BouncingBall(.Web)`, `HelloPyxel`, `JumpGame(.Web)`, `HeadlessSmoke`, `EditorSmoke`) |
 | `csharp/templates/` | `dotnet new pyxel` / `pyxel-web` テンプレートパッケージ |
-| `tools/Generate-KeyEnum.ps1` | `key.rs` → `Key.g.cs` 生成スクリプト |
-| `tools/Pack.ps1` | NuGet パッケージをローカルフィードへ出力 |
+| `tools/Generate-KeyEnum.ps1` / `.sh` | `key.rs` → `Key.g.cs` 生成スクリプト (Windows / macOS) |
+| `tools/Pack.ps1` / `Pack.sh` | NuGet パッケージをローカルフィードへ出力 (Windows / macOS) |
 | `tools/Build-Wasm.ps1` | Web サンプルの一括ビルド (emsdk → Rust staticlib → dotnet publish) |
 
 ## 開発手順
@@ -132,6 +154,38 @@ FFI (`rust/pyxel-bind-cs/src/`) を変更すると build.rs の csbindgen が
 NuGet パッケージ (PyxelSharp / PyxelSharp.Web / Templates / Editor) の再発行は
 `tools\Pack.ps1` (PyxelSharp.Web 用に wasm staticlib もビルドする。Web ツールチェーン
 未設定の環境では `-SkipWasmBuild` で既存の staticlib を再利用)。
+
+### macOS (デスクトップ, Apple Silicon)
+
+必要環境:
+
+| ツール | 用途 |
+|---|---|
+| Xcode Command Line Tools | cc / libclang (bindgen が自動検出) |
+| Rust (stable) + Cargo | `libpyxel_bind_cs.dylib` のビルド |
+| .NET 10 SDK | C# 側 (`csharp/global.json` でバージョン固定) |
+| CMake (`brew install cmake`) | bundled SDL2 のビルド (`sdl2_static`) |
+
+LLVM の個別インストールと `LIBCLANG_PATH` は不要 (CLT 同梱の libclang を
+bindgen が見つける)。SDL2 も bundled ソースから静的リンクされるため brew の
+SDL2 は不要。ビルド・検証コマンドは Windows と同じ (パス区切りだけ `/` に):
+
+```bash
+git clone --recursive https://github.com/clayAndromeda/pyxel-sharp.git
+cd pyxel-sharp
+cargo build --release --features sdl2_static --manifest-path rust/pyxel-bind-cs/Cargo.toml
+dotnet build csharp/PyxelSharp.slnx
+dotnet run --project csharp/samples/BouncingBall
+
+# スモークテスト
+dotnet run --project csharp/samples/HeadlessSmoke
+dotnet run --project csharp/samples/EditorSmoke
+```
+
+スクリプトはシェル版を使う: `tools/Pack.sh` (PyxelSharp / Templates / Editor を
+pack。PyxelSharp.Web は Windows のみ)、`tools/Generate-KeyEnum.sh`
+(`Generate-KeyEnum.ps1` と同一出力、python3 使用)。
+Web (browser-wasm) ビルドは現状 Windows のみ対応。
 
 ### Web (browser-wasm)
 

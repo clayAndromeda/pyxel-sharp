@@ -17,12 +17,16 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/clayAndromeda/pyxel-sharp</PackageProjectUrl>
     <PackageTags>pyxel;editor;tool</PackageTags>
+    <!-- ネイティブ成果物はパッケージを作った OS のものが入る (win は .dll / mac は .dylib) -->
+    <NativeLibFileName Condition="$([MSBuild]::IsOSPlatform('Windows'))">pyxel_bind_cs.dll</NativeLibFileName>
+    <NativeLibFileName Condition="$([MSBuild]::IsOSPlatform('OSX'))">libpyxel_bind_cs.dylib</NativeLibFileName>
+    <NativeLibFileName Condition="$([MSBuild]::IsOSPlatform('Linux'))">libpyxel_bind_cs.so</NativeLibFileName>
   </PropertyGroup>
 
   <!-- The native binding and the editor sprite sheet must land in the tools
        folder next to the assemblies; PackAsTool only packs build output. -->
   <ItemGroup>
-    <None Include="..\..\..\rust\pyxel-bind-cs\target\release\pyxel_bind_cs.dll"
+    <None Include="..\..\..\rust\pyxel-bind-cs\target\release\$(NativeLibFileName)"
           Pack="true" PackagePath="tools/net10.0/any/" Visible="false" />
     <None Include="..\..\..\pyxel\python\pyxel\editor\assets\editor_220x160.png"
           Pack="true" PackagePath="tools/net10.0/any/assets/" Visible="false" />

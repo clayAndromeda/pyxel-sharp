@@ -234,8 +234,10 @@ wasm レガシー (→ DroppedFiles で代替)。
 - [ ] NuGet.org 公開 (Stage 4 で「ローカルフィードでまず自分用」と合意した際の後回し分)。
   セットで: CI (GitHub Actions windows-latest: cargo + dotnet build + HeadlessSmoke +
   EditorSmoke + pack)、TFM の net8.0 (LTS) 引き下げ検討、パッケージ README 整備
-- [ ] Linux / macOS ビルド対応 (pyxel-core は SDL2 なので原理的には可能。
-  runtimes/ 構造はマルチプラットフォーム前提で設計しておく)
+- [x] macOS (Apple Silicon) デスクトップ対応: csproj の RID/dylib 分岐、
+  tools/Pack.sh + Generate-KeyEnum.sh 併設、スモーク 2 本 + サンプル起動 +
+  pack→template→run + pyxel-edit を osx-arm64 で検証済み。
+  残: Linux ビルド対応、macOS の Web ビルド、Intel Mac (osx-x64)
 - [ ] Python サンプル (pyxel/python/pyxel/examples 01〜) の移植で網羅検証 (Stage 3 残)
 - [ ] 本家 pyxel サブモジュールの更新運用 (key.rs 差分 → Generate-KeyEnum.ps1 再実行、
   エディタ移植の差分追従、web ビルドの emscripten バージョン整合の再確認)
