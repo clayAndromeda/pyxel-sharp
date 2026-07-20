@@ -152,17 +152,18 @@ wasm レガシー (→ DroppedFiles で代替)。
   canvas は CSS サイズ必須 (未指定だと ~1px に潰れる) も判明・解決済み。
   スパイク成果物は scratchpad のみ (リポジトリ未組込)
 
-### 本実装の残作業 (スパイク成果のリポジトリ化)
+### 本実装 (スパイク成果のリポジトリ化、2026-07-20 全項目完了 → Stage 6 完了)
 
 検証残:
 - [x] 可視タブでの目視確認: リロード後 640x480 でボール動作をユーザー確認 (2026-07-20)
 - [x] マウス入力の動作確認: Pages デモの MOUSE 座標表示で確認 (2026-07-20)
-- [ ] キーボード入力の動作確認 (BouncingBall はキー未使用のため未検証。
-  JumpGame.Web で確認する。非 US 配列の補正 `_scanCorrection` はスタブ [] の
-  ままで英字配列相当になる点に注意)
-- [ ] 音声の動作確認 (WebAudio 経由。ブラウザの自動再生制限があるため
-  「クリックで開始」ゲート等のユーザー操作トリガーが必要になる見込み。
-  JumpGame.Web で確認する)
+- [x] キーボード入力の動作確認 (2026-07-20): JumpGame.Web で ←/→ 押下保持により
+  プレイヤーが左右端まで移動することを確認。非 US 配列の補正 `_scanCorrection` は
+  スタブ [] のままで英字配列相当 (`_scanCorrection[i]||0` なので安全)
+- [x] 音声の動作確認 (2026-07-20): JumpGame.Web で確認。自動再生制限対策として
+  pyxel-boot.js の `clickToStart` オプションで Init/Run 自体をクリック後に遅延
+  (クリック時に AudioContext が running/48kHz、SDL2 の ScriptProcessorNode 稼働
+  = Playm の BGM が再生されていることを確認)
 
 リポジトリ組込 (2026-07-20 完了):
 - [x] `csharp/samples/BouncingBall.Web`: 検証ハック除去 + レスポンシブ CSS
@@ -174,8 +175,18 @@ wasm レガシー (→ DroppedFiles で代替)。
 - [x] `tools/Build-Wasm.ps1`: 前提チェック → embuilder → シム → cargo staticlib →
   publish の一発化。EmsdkRoot は EMSDK env / 引数化、csproj 側も
   `$(EmsdkRoot)` プロパティ化 (フォワードスラッシュ変換込み)
-- [ ] Web ホスト資産 (index.html 雛形 / JS スタブ / main.js グルー) の共通化
-  (props/targets or コンテンツ NuGet)。第 2 サンプル (JumpGame.Web) 追加時に実施
+- [x] Web ホスト資産の共通化 (2026-07-20): `csharp/src/PyxelSharp.Web/` に
+  `PyxelSharp.Web.props` (RID/LDFlags/wasm-opt 回避/marshal-ilgen/staticlib 参照/
+  ProjectReference を集約。サンプル csproj は Import + TFM だけの ~10 行)、
+  `wwwroot/pyxel-boot.js` (JS スタブ + dotnet.js 起動 + clickToStart +
+  アセットプリロード)、`PyxelWebHost.cs` (JS→MEMFS 書き込みの [JSExport]、
+  props 経由で各ゲームにコンパイル)。staticlib は
+  `rust/.../wasm32-unknown-emscripten/release/pyxel_bind_cs.a` に共通ステージ
+- [x] `csharp/samples/JumpGame.Web` 追加 (2026-07-20): JumpGame を App.cs
+  (リソースパス引数) + Program.cs に分割して共有し、Web 側は [JSExport]
+  GameEntry.Start から `new App("/assets/jump_game.pyxres")`。
+  PyxelSharp.csproj は SkipRustBuild=true 時にデスクトップ dll 不在を許容
+  (クリーンな worktree からの wasm ビルドに必要)
 
 公開・文書 (2026-07-20 完了):
 - [x] GitHub Pages デモ公開: https://clayandromeda.github.io/pyxel-sharp/
@@ -183,18 +194,26 @@ wasm レガシー (→ DroppedFiles で代替)。
 - [x] README に Web セクション (前提・Build-Wasm.ps1・配布方法・デモ URL)
 - [x] WEB_DESIGN.md を確定レシピで更新 (marshal-ilgen 含む)
 
-品質・性能 (計測してから判断):
-- [ ] 体感 fps 計測。30fps 未達なら `RunAOTCompilation=true` を試す (合意済み方針)
-- [ ] 配布サイズ計測 (現状 ~30MB 非圧縮)。必要なら IL トリミング /
-  `-O0` リンクの見直し (wasm-opt 回避策の解除が前提)
-- [ ] Rust 側 wasm ビルドの安定化: nightly-2026-07-14 固定を rust-toolchain 等で
-  明示 (build-std が nightly 依存のため)。将来 .NET の emscripten が更新されたら
-  wasm-opt 回避と -O0 を解除して再計測
+品質・性能 (2026-07-20 計測完了):
+- [x] fps 計測: BouncingBall.Web の FRAME カウンタで 745 フレーム / 約 25 秒
+  ≈ **30fps (pyxel の目標値) 達成**。インタプリタで十分、AOT は不要と判断
+- [x] 配布サイズ計測: publish/wwwroot は非圧縮 ~19MB (dotnet.native.wasm が
+  18MB)、Brotli 圧縮後 ~4.6MB (.br は publish が自動生成、Pages 配信は非圧縮)。
+  合意済みの 15-30MB 許容内なので IL トリミング強化は見送り
+- [x] Rust toolchain 固定: Build-Wasm.ps1 の `-RustToolchain` 既定値で
+  nightly-2026-07-14 に固定 (rust-toolchain.toml はデスクトップビルドが
+  stable のため不採用)。将来 .NET の emscripten が更新されたら wasm-opt 回避と
+  -O0 を解除して再計測 (props の TEMPORARY コメント参照)
 
-アセット対応 (実ゲームに必須、BouncingBall では未検証):
-- [ ] .pyxres / 画像 / フォントのロード: emscripten 仮想 FS (MEMFS) への
-  プリロード方法を確立 (dotnet.js の VFS 機能 or Module.preRun)。
-  JumpGame.Web を第 2 サンプルとして移植して検証するのが望ましい
+アセット対応 (2026-07-20 完了):
+- [x] .pyxres ロード確立: **実行時 fetch → MEMFS 書き込み**方式。
+  pyxel-boot.js の `assets` オプションが fetch し、[JSExport]
+  PyxelWebHost.WriteFile (props 経由で各ゲームにコンパイル) が File.WriteAllBytes
+  で書く。.NET の System.IO と pyxel-core の std::fs は同一 wasm モジュールの
+  MEMFS を共有するのでそのまま Pyxel.Load できる。
+  **注: `WasmFilesToIncludeInFileSystem` (ビルド時 VFS) は
+  Microsoft.NET.Sdk.WebAssembly の boot config 生成が vfs 非対応のため機能しない**
+  (WasmAppBuilder 経路専用)。JumpGame.Web (キーボード+音声+.pyxres) で検証済み
 
 ### 将来拡張 (Stage 6 スコープ外と合意済み)
 

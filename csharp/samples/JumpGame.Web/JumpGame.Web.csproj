@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+
+  <Import Project="..\..\src\PyxelSharp.Web\PyxelSharp.Web.props" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Game logic shared with the desktop JumpGame sample -->
+    <Compile Include="..\JumpGame\App.cs" Link="App.cs" />
+    <!-- Served as a static asset; pyxel-boot.js fetches it and writes it into
+         the emscripten MEMFS before the game starts (see wwwroot/index.html) -->
+    <Content Include="..\..\..\pyxel\python\pyxel\examples\assets\jump_game.pyxres"
+             Link="wwwroot\assets\jump_game.pyxres" />
+  </ItemGroup>
+
+</Project>

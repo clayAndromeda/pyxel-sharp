@@ -50,12 +50,18 @@ dotnet run
 # 同じバージョンの emsdk (install/activate 済み)、
 # rustup: nightly ツールチェーンに wasm32-unknown-emscripten + rust-src
 
-tools\Build-Wasm.ps1        # SDL2 ポート → Rust staticlib → dotnet publish
-# 出力: csharp\samples\BouncingBall.Web\bin\Release\net10.0\publish\wwwroot
+tools\Build-Wasm.ps1        # SDL2 ポート → Rust staticlib → dotnet publish (全 Web サンプル)
+# 出力: csharp\samples\<サンプル>.Web\bin\Release\net10.0\publish\wwwroot
 # 任意の静的 HTTP サーバで配信 (itch.io へは wwwroot を zip)
 ```
 
-技術詳細 (ビルドレシピ、emscripten の制約と回避策) は
+Web ゲームの構成は `csharp/src/PyxelSharp.Web/PyxelSharp.Web.props` を Import した
+csproj + `[JSExport] GameEntry.Start` + index.html の 3 点セット
+(サンプル: `BouncingBall.Web` = 最小構成、`JumpGame.Web` = .pyxres アセット +
+音声 + キーボードあり)。.pyxres 等のアセットは `bootPyxel({ assets: [...] })` が
+fetch して MEMFS に書き込み、音を鳴らすゲームは `clickToStart: true` で
+ブラウザの自動再生制限を回避する。実測 30fps / 配布サイズ非圧縮 ~19MB
+(Brotli ~4.6MB)。技術詳細 (ビルドレシピ、emscripten の制約と回避策) は
 [docs/WEB_DESIGN.md](docs/WEB_DESIGN.md) を参照。
 
 .pyxres リソースの編集にはリソースエディタ (`pyxel edit` 相当の C# 移植) を使う:
@@ -73,10 +79,12 @@ pyxel-edit my_resource.pyxres                    # image/tilemap/sound/music の
 | `rust/pyxel-bind-cs/` | `extern "C"` バインディングクレート (csbindgen が C# P/Invoke を自動生成) |
 | `csharp/src/PyxelSharp/` | 公開 API (`static class Pyxel`, `Key` enum, `Color` struct) + 自動生成 P/Invoke (`NativeMethods.g.cs`) |
 | `csharp/src/PyxelSharp.Editor/` | リソースエディタ (本家 Python editor の移植、dotnet tool `pyxel-edit`) |
-| `csharp/samples/` | サンプル (`BouncingBall`, `HelloPyxel`, `JumpGame`, `HeadlessSmoke`, `EditorSmoke`) |
+| `csharp/src/PyxelSharp.Web/` | Web (browser-wasm) 共通ビルド設定 + 起動グルー (props / pyxel-boot.js / PyxelWebHost.cs) |
+| `csharp/samples/` | サンプル (`BouncingBall(.Web)`, `HelloPyxel`, `JumpGame(.Web)`, `HeadlessSmoke`, `EditorSmoke`) |
 | `csharp/templates/` | `dotnet new pyxel` テンプレートパッケージ |
 | `tools/Generate-KeyEnum.ps1` | `key.rs` → `Key.g.cs` 生成スクリプト |
 | `tools/Pack.ps1` | NuGet パッケージをローカルフィードへ出力 |
+| `tools/Build-Wasm.ps1` | Web サンプルの一括ビルド (emsdk → Rust staticlib → dotnet publish) |
 
 ## ビルド
 

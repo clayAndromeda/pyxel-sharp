@@ -192,10 +192,90 @@ rAF → Rust main loop → UnmanagedCallersOnly 経由で毎フレーム呼ば�
   なる。ホストページで `canvas { width: 640px; height: 480px; }` のように
   明示するのが必須 (本家 pyxel.js も CSS でサイズ制御)。本実装ではレスポンシブ
   CSS (アスペクト比維持) にする
-- [ ] 可視タブでの目視確認 (ボール描画・体感 fps)。非表示タブでは rAF が止まる
+- [x] 可視タブでの目視確認 (ボール描画・体感 fps)。非表示タブでは rAF が止まる
   (検証は setTimeout ポリフィル `?forceRaf=1` で実施)
-- [ ] キーボード/マウス入力の動作確認
-- [ ] リポジトリ構成化: csharp/samples/BouncingBall.Web + tools/Build-Wasm.ps1
+- [x] キーボード/マウス入力の動作確認
+- [x] リポジトリ構成化: csharp/samples/BouncingBall.Web + tools/Build-Wasm.ps1
   (emsdk セットアップ + cargo staticlib + publish の一発化)、スパイクの
   forceRaf/trace ハックの除去
-- [ ] GitHub Pages デモ + README 手順
+- [x] GitHub Pages デモ + README 手順
+
+## 6. 本実装の確定構成 (2026-07-20、Stage 6 完了)
+
+### 共通ホスト資産 (csharp/src/PyxelSharp.Web/)
+
+Web ゲーム 1 本あたりの固有ファイルを「csproj ~10 行 + index.html + Program.cs
+([JSExport] GameEntry.Start)」まで削減した。
+
+- **PyxelSharp.Web.props**: RID (browser-wasm) / OutputType / EmsdkRoot 解決 /
+  EmccExtraLDFlags (SDL2 ポート直接リンク) / wasm-opt 回避 (TEMPORARY) /
+  marshal-ilgen / PyxelSharp への ProjectReference / staticlib の
+  NativeFileReference / 前提チェック Target を集約。サンプルは
+  `<Import Project="..\..\src\PyxelSharp.Web\PyxelSharp.Web.props" />` するだけ
+- **wwwroot/pyxel-boot.js** (Content として各 wwwroot に注入):
+  pyxel-core が要求する JS スタブ (`_readVirtualGamepadBitmask` /
+  `_scanCorrection` / `resetPyxel`) + dotnet.js 起動 + unwind 握りつぶし +
+  `?forceRaf=1` テスト補助を一本化した `bootPyxel(options)` を export
+- **PyxelWebHost.cs** (Compile として各ゲームの主アセンブリに注入):
+  `[JSExport] PyxelWebHost.WriteFile(path, bytes)` — JS からの MEMFS 書き込み口
+- staticlib は Build-Wasm.ps1 が
+  `rust/pyxel-bind-cs/target/wasm32-unknown-emscripten/release/pyxel_bind_cs.a`
+  へリネームステージし、props がそこを参照 (プロジェクトごとのコピー廃止)
+
+### アセットロード (.pyxres 等) — JumpGame.Web で検証済み
+
+**実行時 fetch → MEMFS 書き込み**方式。index.html 側:
+
+```js
+await bootPyxel({
+  clickToStart: true,
+  assets: [{ url: './assets/jump_game.pyxres', path: '/assets/jump_game.pyxres' }],
+});
+```
+
+bootPyxel が fetch → `exports.PyxelWebHost.WriteFile` → `File.WriteAllBytes`。
+.NET の System.IO と pyxel-core の std::fs は同一 wasm モジュールの emscripten
+MEMFS を共有するため、そのまま `Pyxel.Load("/assets/...")` できる。
+アセットファイル自体は csproj の `<Content Link="wwwroot\assets\..." />` で
+静的配信に含める。
+
+**採用しなかった案**: ビルド時 VFS (`WasmFilesToIncludeInFileSystem`) は
+Microsoft.NET.Sdk.WebAssembly では機能しない。この SDK の boot config は
+Microsoft.NET.Sdk.WebAssembly.Tasks が dotnet.js に埋め込む形式で生成され、
+vfs エントリを一切出力しない (vfs は runtime pack の WasmAppBuilder +
+`WasmGenerateAppBundle=true` 経路専用。dotnet.js ランタイム自体は vfs 対応
+コードを持つが、設定を書く側が対応していない)。
+
+### 音声 (自動再生制限) — JumpGame.Web で検証済み
+
+`clickToStart: true` で **Pyxel.Init/Run 自体をクリック後まで遅延**する
+(AudioContext がユーザージェスチャ内で生成され、最初から running になる)。
+クリック後に AudioContext state=running (48kHz)、SDL2 の ScriptProcessorNode
+稼働 = Playm の BGM 再生を確認。音を鳴らさないゲームはゲート不要 (BouncingBall
+は即起動)。
+
+### キーボード — JumpGame.Web で検証済み
+
+←/→ 押下保持でプレイヤーが両端まで移動することを確認。`_scanCorrection` スタブは
+`[]` のままで安全 (Rust 側 eval が `_scanCorrection[i]||0` のため)。非 US 配列の
+文字キー補正が必要になったら本家 pyxel.js の `_CODE_TO_SCANCODE` 実装を
+pyxel-boot.js に移植する (将来課題)。
+
+### 計測結果 (2026-07-20、ローカル Chrome)
+
+- **fps**: BouncingBall.Web の FRAME カウンタで 745 フレーム / 約 25 秒 ≈ 30fps
+  (pyxel の既定目標値に到達)。インタプリタ実行で十分、AOT 不要
+- **サイズ**: publish/wwwroot 非圧縮 ~19MB (dotnet.native.wasm 18MB が支配的)、
+  Brotli ~4.6MB (.br/.gz は publish が自動生成)
+
+### ビルドの再現性メモ
+
+- Rust nightly は **Build-Wasm.ps1 の `-RustToolchain` 既定値 (nightly-2026-07-14)
+  で固定** (rust-toolchain.toml はデスクトップビルドが stable のため不採用)
+- PyxelSharp.csproj は `SkipRustBuild=true` のときデスクトップ dll 不在を許容
+  (wasm ビルドは staticlib しか使わないため。クリーンな checkout/worktree からの
+  Web ビルドに必要)
+- git worktree でビルドする場合: `git submodule update --init` が必要。また
+  デスクトップ向け cargo (bundled SDL2 の cmake) は worktree の深いパスで MSVC
+  FileTracker が FTK1011 (260 文字制限) で失敗する — デスクトップビルドは
+  メインの checkout で行うこと

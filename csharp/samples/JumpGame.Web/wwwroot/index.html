@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Pyxel-Sharp Bouncing Ball</title>
+  <title>Pyxel Jump (Pyxel-Sharp)</title>
   <style>
     html, body { height: 100%; margin: 0; }
     body {
@@ -23,9 +23,15 @@
 <body>
   <p id="status">loading .NET runtime...</p>
   <canvas id="canvas" width="160" height="120" tabindex="1"></canvas>
+  <p>&larr; / &rarr; move &middot; land on floors &middot; catch fruit</p>
   <script type="module">
     import { bootPyxel } from './pyxel-boot.js';
-    await bootPyxel();
+    // The game plays music from startup, so gate on a click: browsers only
+    // allow audio to start inside a user gesture.
+    await bootPyxel({
+      clickToStart: true,
+      assets: [{ url: './assets/jump_game.pyxres', path: '/assets/jump_game.pyxres' }],
+    });
   </script>
 </body>
 </html>

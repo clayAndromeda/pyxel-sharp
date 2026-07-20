@@ -25,15 +25,16 @@
 
   <!-- Builds pyxel_bind_cs.dll (which also regenerates NativeMethods.g.cs) and
        copies it next to the managed output. Set SkipRustBuild=true when the DLL
-       is already built (e.g. sandboxed CI steps). -->
+       is already built (e.g. sandboxed CI steps) or not needed at all
+       (browser-wasm links the staticlib instead; see PyxelSharp.Web.props). -->
   <Target Name="BuildRustBinding" BeforeTargets="AssignTargetPaths">
     <Exec Condition="'$(SkipRustBuild)' != 'true'"
           Command="cargo build --$(RustProfile) --features sdl2_static"
           WorkingDirectory="$(RustCrateDir)"
           EnvironmentVariables="LIBCLANG_PATH=$(LibClangPath)" />
-    <Error Condition="!Exists('$(RustDll)')"
+    <Error Condition="'$(SkipRustBuild)' != 'true' and !Exists('$(RustDll)')"
            Text="pyxel_bind_cs.dll not found at $(RustDll). Run 'cargo build --release --features sdl2_static' in rust/pyxel-bind-cs first." />
-    <ItemGroup>
+    <ItemGroup Condition="Exists('$(RustDll)')">
       <None Include="$(RustDll)" CopyToOutputDirectory="PreserveNewest" Visible="false"
             Pack="true" PackagePath="runtimes/win-x64/native/" />
     </ItemGroup>
