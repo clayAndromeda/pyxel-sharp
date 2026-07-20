@@ -4,12 +4,17 @@
 # NOTE: On machines with Smart App Control, run this script from a detached
 # pwsh process (Start-Process pwsh -File tools\Pack.ps1), not from a sandbox.
 #
-#   tools\Pack.ps1 [-Feed <dir>] [-Version <x.y.z>] [-SkipRustBuild]
+#   tools\Pack.ps1 [-Feed <dir>] [-Version <x.y.z>] [-SkipRustBuild] [-SkipWasmBuild]
+#
+# -SkipRustBuild reuses an existing desktop pyxel_bind_cs.dll; -SkipWasmBuild
+# reuses an existing wasm staticlib (otherwise Build-Wasm.ps1 -StaticLibOnly
+# runs, which needs the emsdk/nightly toolchain from docs/WEB_DESIGN.md).
 
 param(
     [string]$Feed = (Join-Path $env:USERPROFILE ".nuget-local"),
     [string]$Version = "",
-    [switch]$SkipRustBuild
+    [switch]$SkipRustBuild,
+    [switch]$SkipWasmBuild
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,6 +40,14 @@ if ($Version) { $versionArgs = @("-p:Version=$Version") }
 dotnet pack (Join-Path $repoRoot "csharp\src\PyxelSharp\PyxelSharp.csproj") `
     -c Release -o $Feed -p:SkipRustBuild=true @versionArgs
 if ($LASTEXITCODE -ne 0) { throw "dotnet pack PyxelSharp failed ($LASTEXITCODE)" }
+
+# Browser-wasm build support (staticlib + props/targets + boot glue)
+if (-not $SkipWasmBuild) {
+    & (Join-Path $PSScriptRoot "Build-Wasm.ps1") -StaticLibOnly
+}
+dotnet pack (Join-Path $repoRoot "csharp\src\PyxelSharp.Web\PyxelSharp.Web.csproj") `
+    -c Release -o $Feed -p:SkipRustBuild=true @versionArgs
+if ($LASTEXITCODE -ne 0) { throw "dotnet pack PyxelSharp.Web failed ($LASTEXITCODE)" }
 
 dotnet pack (Join-Path $repoRoot "csharp\templates\PyxelSharp.Templates.csproj") `
     -c Release -o $Feed @versionArgs

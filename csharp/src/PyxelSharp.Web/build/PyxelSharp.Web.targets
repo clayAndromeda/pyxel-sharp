@@ -1,0 +1,46 @@
+<!-- NuGet-imported half of the PyxelSharp.Web package (late import; computed
+     properties, items, and prerequisite checks). Keep the build logic in sync
+     with ..\PyxelSharp.Web.props, the repo-internal variant used by
+     csharp/samples. Prerequisites for consumers (see the package README /
+     https://github.com/clayAndromeda/pyxel-sharp):
+       - dotnet workload wasm-tools (bundles emscripten 3.1.56)
+       - emsdk installed+activated at the SAME version, EMSDK env var set
+       - 'embuilder build sdl2' run once (fills the emsdk sysroot cache) -->
+<Project>
+
+  <PropertyGroup>
+    <!-- Defaults to the EMSDK environment variable set by emsdk_env; can be
+         overridden in the project file or with -p:EmsdkRoot=... -->
+    <EmsdkRoot Condition="'$(EmsdkRoot)' == ''">$(EMSDK)</EmsdkRoot>
+    <!-- emcc response files require forward slashes -->
+    <_EmsdkSysrootLib>$([System.String]::Copy('$(EmsdkRoot)').Replace('\','/'))/upstream/emscripten/cache/sysroot/lib/wasm32-emscripten</_EmsdkSysrootLib>
+    <!-- Link the SDL2 port prebuilt by emsdk (-sUSE_SDL=2 would try to build
+         the port inside the read-only dotnet pack cache). Appends so projects
+         can add their own flags before this import. -->
+    <EmccExtraLDFlags>-L$(_EmsdkSysrootLib) -lSDL2 -lhtml5 -sALLOW_MEMORY_GROWTH=1 $(EmccExtraLDFlags)</EmccExtraLDFlags>
+
+    <!-- Rust staticlib shipped in the package (stem matches
+         DllImport("pyxel_bind_cs")) -->
+    <PyxelSharpWebStaticLib Condition="'$(PyxelSharpWebStaticLib)' == ''">$(MSBuildThisFileDirectory)..\native\pyxel_bind_cs.a</PyxelSharpWebStaticLib>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The default wasm link stubs out the marshal-ilgen runtime component,
+         which is needed for the bool parameters in PyxelSharp's P/Invokes
+         (mono asserts in stub_emit_marshal_ilgen without it) -->
+    <_MonoComponent Include="marshal-ilgen" />
+    <NativeFileReference Include="$(PyxelSharpWebStaticLib)" />
+    <!-- Shared boot glue: JS stubs expected by pyxel-core + dotnet.js startup -->
+    <Content Include="$(MSBuildThisFileDirectory)wwwroot\pyxel-boot.js" Link="wwwroot\pyxel-boot.js" />
+    <!-- JS-callable MEMFS helpers used by pyxel-boot.js's asset preloading -->
+    <Compile Include="$(MSBuildThisFileDirectory)PyxelWebHost.cs" Link="PyxelWebHost.cs" />
+  </ItemGroup>
+
+  <Target Name="EnsurePyxelSharpWebPrerequisites" BeforeTargets="Build">
+    <Error Condition="'$(EmsdkRoot)' == ''"
+           Text="EmsdkRoot is not set. Install+activate emsdk (same version as the wasm-tools workload's emscripten), then set the EMSDK environment variable (emsdk_env) or pass -p:EmsdkRoot=&lt;dir&gt;." />
+    <Error Condition="'$(EmsdkRoot)' != '' and !Exists('$(_EmsdkSysrootLib)/libSDL2.a')"
+           Text="SDL2 port not found at $(_EmsdkSysrootLib)/libSDL2.a. Run 'embuilder build sdl2' once from an emsdk environment." />
+  </Target>
+
+</Project>

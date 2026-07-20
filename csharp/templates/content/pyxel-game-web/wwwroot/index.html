@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>PyxelGameWeb</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 8px;
+      background: #222; color: #888; font-family: monospace;
+    }
+    /* Emscripten's SDL2 sizes its framebuffer from the canvas CSS size, so an
+       explicit size is required (an unstyled canvas collapses to ~1px). */
+    canvas {
+      width: min(90vw, calc(85vh * 4 / 3));
+      aspect-ratio: 4 / 3;
+      image-rendering: pixelated;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <p id="status">loading .NET runtime...</p>
+  <canvas id="canvas" width="160" height="120" tabindex="1"></canvas>
+  <script type="module">
+    import { bootPyxel } from './pyxel-boot.js';
+    await bootPyxel({
+      // clickToStart: true, // required when the game plays audio
+      // Fetched over HTTP and written into the wasm filesystem before the
+      // game starts, so Pyxel.Load(path) can read them:
+      // assets: [{ url: './assets/my_resource.pyxres', path: '/assets/my_resource.pyxres' }],
+    });
+  </script>
+</body>
+</html>

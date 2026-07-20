@@ -11,7 +11,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>pyxel-edit</ToolCommandName>
     <PackageId>PyxelSharp.Editor</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>clayAndromeda</Authors>
     <Description>Pyxel resource editor (pyxel edit equivalent) built on PyxelSharp. Run as pyxel-edit.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

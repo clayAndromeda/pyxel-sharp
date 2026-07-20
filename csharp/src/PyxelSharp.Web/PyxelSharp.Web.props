@@ -1,10 +1,15 @@
-<!-- Shared build configuration for PyxelSharp browser-wasm samples/games.
+<!-- Shared build configuration for PyxelSharp browser-wasm samples/games
+     INSIDE this repository (ProjectReference + repo-staged staticlib).
      Import from a Microsoft.NET.Sdk.WebAssembly project:
 
        <Import Project="..\..\src\PyxelSharp.Web\PyxelSharp.Web.props" />
 
      Prerequisites and the full recipe live in docs/WEB_DESIGN.md;
-     tools/Build-Wasm.ps1 drives the whole build. -->
+     tools/Build-Wasm.ps1 drives the whole build.
+
+     Keep the build logic in sync with build\PyxelSharp.Web.props|targets,
+     the NuGet-packaged variant consumed by `dotnet new pyxel-web` projects
+     (packed by PyxelSharp.Web.csproj). -->
 <Project>
 
   <PropertyGroup>

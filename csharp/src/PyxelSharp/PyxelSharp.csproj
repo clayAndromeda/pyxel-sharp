@@ -8,7 +8,7 @@
     <RootNamespace>PyxelSharp</RootNamespace>
     <!-- NuGet package metadata (local feed distribution; see docs/TODO.md Stage 4) -->
     <PackageId>PyxelSharp</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>clayAndromeda</Authors>
     <Description>C# binding for the Pyxel retro game engine (bundles pyxel-core v2.9.8, win-x64 native included).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

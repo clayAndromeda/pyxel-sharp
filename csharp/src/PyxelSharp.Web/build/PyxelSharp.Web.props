@@ -1,0 +1,19 @@
+<!-- NuGet-imported half of the PyxelSharp.Web package (early import; property
+     defaults only). Consumers get this automatically via the package's build/
+     folder. Keep the build logic in sync with ..\PyxelSharp.Web.props, which
+     is the repo-internal (ProjectReference) variant used by csharp/samples. -->
+<Project>
+
+  <PropertyGroup>
+    <OutputType Condition="'$(OutputType)' == ''">Exe</OutputType>
+    <AllowUnsafeBlocks Condition="'$(AllowUnsafeBlocks)' == ''">true</AllowUnsafeBlocks>
+    <InvariantGlobalization Condition="'$(InvariantGlobalization)' == ''">true</InvariantGlobalization>
+
+    <!-- TEMPORARY (remove when the .NET workload ships a newer emscripten):
+         Rust nightly LLVM records feature names (bulk-memory-opt etc.) that
+         emscripten 3.1.56's wasm-opt rejects, so skip binaryen entirely. -->
+    <WasmRunWasmOpt Condition="'$(WasmRunWasmOpt)' == ''">false</WasmRunWasmOpt>
+    <EmccLinkOptimizationFlag Condition="'$(EmccLinkOptimizationFlag)' == ''">-O0</EmccLinkOptimizationFlag>
+  </PropertyGroup>
+
+</Project>

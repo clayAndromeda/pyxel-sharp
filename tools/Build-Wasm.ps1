@@ -2,6 +2,10 @@
 #   emsdk env -> SDL2 port -> emcc shim -> Rust staticlib -> dotnet publish
 #
 #   tools\Build-Wasm.ps1 [-Project <dir>[,<dir>...]] [-EmsdkRoot <dir>] [-RustToolchain <name>]
+#                        [-StaticLibOnly]
+#
+# -StaticLibOnly stops after staging the Rust staticlib (used by tools/Pack.ps1
+# to prepare the PyxelSharp.Web package; no sample publish).
 #
 # Prerequisites (see docs/WEB_DESIGN.md):
 #   - dotnet workload wasm-tools (bundles emscripten 3.1.56)
@@ -15,7 +19,8 @@ param(
     [string]$EmsdkRoot = $env:EMSDK,
     # Pinned: -Zbuild-std needs nightly (see docs/WEB_DESIGN.md; keep in sync
     # with the toolchain named in that doc when bumping)
-    [string]$RustToolchain = "nightly-2026-07-14"
+    [string]$RustToolchain = "nightly-2026-07-14",
+    [switch]$StaticLibOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -70,6 +75,11 @@ finally {
 #    (renamed: the stem must match DllImport("pyxel_bind_cs"))
 $wasmTargetDir = Join-Path $repoRoot "rust\pyxel-bind-cs\target\wasm32-unknown-emscripten\release"
 Copy-Item (Join-Path $wasmTargetDir "libpyxel_bind_cs.a") (Join-Path $wasmTargetDir "pyxel_bind_cs.a") -Force
+
+if ($StaticLibOnly) {
+    Write-Host "Staticlib staged: $(Join-Path $wasmTargetDir 'pyxel_bind_cs.a')"
+    return
+}
 
 # 6. Publish each project (SkipRustBuild: the desktop cargo step is not needed)
 foreach ($proj in $Project) {

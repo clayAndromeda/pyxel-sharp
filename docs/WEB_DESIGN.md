@@ -222,6 +222,26 @@ Web ゲーム 1 本あたりの固有ファイルを「csproj ~10 行 + index.ht
   `rust/pyxel-bind-cs/target/wasm32-unknown-emscripten/release/pyxel_bind_cs.a`
   へリネームステージし、props がそこを参照 (プロジェクトごとのコピー廃止)
 
+### NuGet パッケージ版 (PyxelSharp.Web、2026-07-20 追加)
+
+`dotnet new pyxel-web` プロジェクトがリポジトリなしでビルドできるよう、上記の
+共通資産を **PyxelSharp.Web パッケージ**として配布する
+(csharp/src/PyxelSharp.Web/PyxelSharp.Web.csproj、パッケージングのみで
+アセンブリは含まない・slnx 対象外):
+
+- `build/PyxelSharp.Web.props|targets`: リポ内 PyxelSharp.Web.props の
+  パッケージ版 (**要同期**、両ファイルの先頭コメント参照)。props は
+  プロパティ既定値 (早期 import)、targets は EmsdkRoot 解決・LD フラグ・
+  marshal-ilgen・NativeFileReference・pyxel-boot.js (Content)・
+  PyxelWebHost.cs (Compile、ソース配布) と前提チェック (EMSDK 未設定 /
+  `embuilder build sdl2` 未実行を実行可能なメッセージで検出)
+- `native/pyxel_bind_cs.a`: wasm staticlib 同梱 → **消費側は Rust 不要**。
+  wasm-tools ワークロード + emsdk (同版) + SDL2 ポートは消費側で必要
+  (リンクは消費側の dotnet publish で行われるため)
+- PyxelSharp への ProjectReference が nuspec 依存になる (ProjectReference の
+  代わり)。pack は tools/Pack.ps1 (staticlib を Build-Wasm.ps1 -StaticLibOnly
+  で用意。既存 staticlib 再利用は -SkipWasmBuild)
+
 ### アセットロード (.pyxres 等) — JumpGame.Web で検証済み
 
 **実行時 fetch → MEMFS 書き込み**方式。index.html 側:

@@ -219,7 +219,14 @@ wasm レガシー (→ DroppedFiles で代替)。
 
 - [ ] スマホ対応: タッチ操作・仮想ゲームパッド (本家 gamepad 実装 +
   `_readVirtualGamepadBitmask` の実装移植)
-- [ ] `dotnet new pyxel-web` テンプレート (PyxelSharp.Templates への追加)
+- [x] `dotnet new pyxel-web` テンプレート (2026-07-20 完了): 前提として
+  **PyxelSharp.Web NuGet パッケージ**を新設 (csharp/src/PyxelSharp.Web/
+  PyxelSharp.Web.csproj)。build/PyxelSharp.Web.props+targets (リポ内 props の
+  パッケージ版、要同期) + pyxel-boot.js + PyxelWebHost.cs (ソース配布、消費側で
+  コンパイル) + wasm staticlib (native/) を同梱し PyxelSharp 依存。消費側は
+  Rust 不要 (wasm-tools + emsdk + embuilder build sdl2 は必要、targets の
+  prereq チェックが誘導)。Build-Wasm.ps1 に -StaticLibOnly、Pack.ps1 に
+  PyxelSharp.Web pack + -SkipWasmBuild を追加。全パッケージ 0.2.0 に更新
 - [ ] エディタ (pyxel-edit) の Web 実行 (ファイル I/O の設計が別途必要)
 
 ## その他 (時期未定)

@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Packaging-only project: ships the browser-wasm build support
+       (build/*.props|targets + pyxel-boot.js + PyxelWebHost.cs + the Rust
+       wasm staticlib) so `dotnet new pyxel-web` projects can build without
+       this repository. Produces no library; the game code lives in the
+       consumer, PyxelSharp.dll comes from the PyxelSharp package dependency.
+       The staticlib must be staged first: tools/Build-Wasm.ps1 -StaticLibOnly
+       (tools/Pack.ps1 drives both). Not part of PyxelSharp.slnx. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackageId>PyxelSharp.Web</PackageId>
+    <Version>0.2.0</Version>
+    <Authors>clayAndromeda</Authors>
+    <Description>Browser-wasm build support for PyxelSharp games: MSBuild props/targets, boot glue (pyxel-boot.js), and the pyxel-core wasm staticlib. Requires the wasm-tools workload and a matching emsdk (see project site).</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/clayAndromeda/pyxel-sharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/clayAndromeda/pyxel-sharp</RepositoryUrl>
+    <PackageTags>pyxel;game;gamedev;retro;wasm;browser</PackageTags>
+
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!-- PyxelWebHost.cs is shipped as source (compiled into each consumer by
+         build/PyxelSharp.Web.targets), not into this assembly: [JSExport]
+         only makes sense in the consumer's browser-wasm build -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PyxelSharpWebStaticLibSource>$(MSBuildThisFileDirectory)..\..\..\rust\pyxel-bind-cs\target\wasm32-unknown-emscripten\release\pyxel_bind_cs.a</PyxelSharpWebStaticLibSource>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Becomes the nuspec dependency on the PyxelSharp package -->
+    <ProjectReference Include="..\PyxelSharp\PyxelSharp.csproj" />
+
+    <None Include="build\PyxelSharp.Web.props" Pack="true" PackagePath="build/" />
+    <None Include="build\PyxelSharp.Web.targets" Pack="true" PackagePath="build/" />
+    <None Include="PyxelWebHost.cs" Pack="true" PackagePath="build/" />
+    <None Include="wwwroot\pyxel-boot.js" Pack="true" PackagePath="build/wwwroot/" />
+    <None Include="$(PyxelSharpWebStaticLibSource)" Pack="true" PackagePath="native/" Visible="false" />
+  </ItemGroup>
+
+  <Target Name="EnsureWasmStaticLib" BeforeTargets="GenerateNuspec">
+    <Error Condition="!Exists('$(PyxelSharpWebStaticLibSource)')"
+           Text="wasm staticlib not found at $(PyxelSharpWebStaticLibSource). Run tools/Build-Wasm.ps1 -StaticLibOnly first (tools/Pack.ps1 does this by default)." />
+  </Target>
+
+</Project>
